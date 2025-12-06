@@ -35,8 +35,8 @@ SAVING-MONEYSAVING14/6,250,561,280.5,400,PANG,Saving`;
 
 // --- Configuration ---
 const DEFAULT_USERS = [
-  { email: 'weerachit.jay@gmail.com', pass: 'Suza01Suz@!#', name: 'Jay', role: 'admin' },
-  { email: 'admin@thailife.com', pass: 'admin1234', name: 'Admin', role: 'viewer' },
+  { username: 'weerachit.jay', pass: 'Suza01Suz@!#', name: 'Jay', role: 'admin' },
+  { username: 'admin', pass: 'admin1234', name: 'Admin', role: 'viewer' },
 ];
 
 const SHEET_CONFIG = {
@@ -151,13 +151,13 @@ const KPICard = ({ title, value, subtext, icon: Icon, gradient, trend }) => (
 
 // --- User Management Component ---
 const UserManagement = ({ users, onAddUser, onDeleteUser, currentUser }) => {
-  const [newUser, setNewUser] = useState({ email: '', pass: '', name: '', role: 'viewer' });
+  const [newUser, setNewUser] = useState({ username: '', pass: '', name: '', role: 'viewer' });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!newUser.email || !newUser.pass || !newUser.name) return;
+    if (!newUser.username || !newUser.pass || !newUser.name) return;
     onAddUser(newUser);
-    setNewUser({ email: '', pass: '', name: '', role: 'viewer' });
+    setNewUser({ username: '', pass: '', name: '', role: 'viewer' });
   };
 
   return (
@@ -173,8 +173,8 @@ const UserManagement = ({ users, onAddUser, onDeleteUser, currentUser }) => {
             <input type="text" className="glass-input w-full px-4 py-2 rounded-xl" placeholder="John Doe" value={newUser.name} onChange={e => setNewUser({ ...newUser, name: e.target.value })} required />
           </div>
           <div className="flex-1 w-full">
-            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Email</label>
-            <input type="email" className="glass-input w-full px-4 py-2 rounded-xl" placeholder="john@example.com" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} required />
+            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Username</label>
+            <input type="text" className="glass-input w-full px-4 py-2 rounded-xl" placeholder="john.doe" value={newUser.username} onChange={e => setNewUser({ ...newUser, username: e.target.value })} required />
           </div>
           <div className="flex-1 w-full">
             <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Password</label>
@@ -196,7 +196,7 @@ const UserManagement = ({ users, onAddUser, onDeleteUser, currentUser }) => {
             <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-xs">
               <tr>
                 <th className="px-6 py-3 rounded-tl-xl">Name</th>
-                <th className="px-6 py-3">Email</th>
+                <th className="px-6 py-3">Username</th>
                 <th className="px-6 py-3">Role</th>
                 <th className="px-6 py-3 rounded-tr-xl text-center">Action</th>
               </tr>
@@ -204,14 +204,14 @@ const UserManagement = ({ users, onAddUser, onDeleteUser, currentUser }) => {
             <tbody className="divide-y divide-slate-100">
               {users.map((u, idx) => (
                 <tr key={idx} className="hover:bg-slate-50/50">
-                  <td className="px-6 py-4 font-bold text-slate-700">{u.name} {u.email === currentUser.email && <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded ml-2">You</span>}</td>
-                  <td className="px-6 py-4 text-slate-500">{u.email}</td>
+                  <td className="px-6 py-4 font-bold text-slate-700">{u.name} {u.username === currentUser.username && <span className="text-xs bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded ml-2">You</span>}</td>
+                  <td className="px-6 py-4 text-slate-500">{u.username}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>{u.role || 'viewer'}</span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                    {u.email !== 'weerachit.jay@gmail.com' && u.email !== currentUser.email && (
-                      <button onClick={() => onDeleteUser(u.email)} className="text-rose-500 hover:text-rose-700 font-medium text-xs bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors">
+                    {u.role !== 'admin' && (
+                      <button onClick={() => onDeleteUser(u.id, u.username)} className="text-rose-500 hover:text-rose-700 font-medium text-xs bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors">
                         Delete
                       </button>
                     )}
@@ -228,17 +228,17 @@ const UserManagement = ({ users, onAddUser, onDeleteUser, currentUser }) => {
 
 // --- Login Page Component ---
 const LoginPage = ({ onLogin, users }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const validUser = users.find(u => u.email === email && u.pass === password);
+    const validUser = users.find(u => u.username === username && u.pass === password);
     if (validUser) {
       onLogin(validUser);
     } else {
-      setError('Invalid email or password');
+      setError('Invalid username or password');
     }
   };
 
@@ -255,13 +255,13 @@ const LoginPage = ({ onLogin, users }) => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">Username</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full glass-input px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
-              placeholder="Enter your email"
+              placeholder="Enter your username"
               required
             />
           </div>
@@ -1037,15 +1037,28 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [usersList, setUsersList] = useState(DEFAULT_USERS);
 
+  // --- Firebase Logic ---
+  useEffect(() => {
+    // Subscribe to real-time updates from Firestore
+    const unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+      const cloudUsers = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      // Merge hardcoded admins with cloud users (Hardcoded takes precedence for Login check, but here we just list them)
+      // Actually, for the list, we show both.
+      // But let's filter out if cloud users somehow duplicate the hardcoded ones to avoid confusion, though unlikely with different IDs.
+      setUsersList([...DEFAULT_USERS, ...cloudUsers]);
+    }, (error) => {
+      console.error("Error fetching users:", error);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   useEffect(() => {
     const auth = localStorage.getItem('isAuthenticated');
     const savedUser = localStorage.getItem('user');
-
-    // Load custom users from local storage if any
-    const storedUsers = localStorage.getItem('thailife_users');
-    if (storedUsers) {
-      setUsersList(JSON.parse(storedUsers));
-    }
 
     if (auth === 'true' && savedUser) {
       setIsAuthenticated(true);
@@ -1067,16 +1080,31 @@ const App = () => {
     setUser(null);
   };
 
-  const handleAddUser = (newUser) => {
-    const updatedUsers = [...usersList, newUser];
-    setUsersList(updatedUsers);
-    localStorage.setItem('thailife_users', JSON.stringify(updatedUsers));
+  const handleAddUser = async (newUser) => {
+    try {
+      await addDoc(collection(db, "users"), newUser);
+      // No need to update state manually, onSnapshot will handle it
+    } catch (e) {
+      console.error("Error adding user: ", e);
+      alert("Error adding user to Cloud: " + e.message);
+    }
   };
 
-  const handleDeleteUser = (email) => {
-    const updatedUsers = usersList.filter(u => u.email !== email);
-    setUsersList(updatedUsers);
-    localStorage.setItem('thailife_users', JSON.stringify(updatedUsers));
+  const handleDeleteUser = async (id, username) => {
+    // Prevent deleting hardcoded admins via ID check (hardcoded don't have Firestore ID)
+    if (!id) {
+      alert("Cannot delete built-in admin users.");
+      return;
+    }
+
+    if (confirm(`Are you sure you want to delete user ${username}?`)) {
+      try {
+        await deleteDoc(doc(db, "users", id));
+      } catch (e) {
+        console.error("Error deleting user: ", e);
+        alert("Error deleting user: " + e.message);
+      }
+    }
   };
 
   return isAuthenticated
