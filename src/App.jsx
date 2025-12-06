@@ -7,7 +7,7 @@ import {
   Upload, Filter, Calculator, Calendar, DollarSign, Users, Target, TrendingUp,
   AlertCircle, FileSpreadsheet, Timer, ArrowUpRight, ArrowDownRight, Activity,
   Zap, Brain, ChevronUp, ChevronDown, CheckCircle, XCircle, AlertTriangle, Lock, LogOut,
-  Clock, Lightbulb, Search
+  Clock, Lightbulb, Search, RefreshCw, MousePointerClick, Layers
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { db } from './firebase';
@@ -107,6 +107,38 @@ const getSmartRecommendation = (stats, targetCpl) => {
   }
 
   return { type: 'danger', action: 'STOP/FIX', reason: 'CPL Too High', color: 'bg-rose-100 text-rose-700', icon: XCircle };
+};
+
+const getAudienceRecommendation = (stats, targetCpl) => {
+  const { cpl, ctr, frequency, cost, leads } = stats;
+
+  if (cost === 0) return { type: 'neutral', action: 'WAIT', reason: 'No Spend', color: 'bg-slate-100 text-slate-500' };
+
+  // 1. Saturation Check (High Frequency)
+  if (frequency > 4.0) {
+    if (cpl > targetCpl) return { type: 'danger', action: 'ROTATE', reason: 'Saturated (Freq > 4)', color: 'bg-rose-100 text-rose-700', icon: RefreshCw };
+    return { type: 'warning', action: 'MONITOR', reason: 'High Frequency', color: 'bg-amber-100 text-amber-700', icon: AlertTriangle };
+  }
+
+  if (!targetCpl) return { type: 'neutral', action: '-', reason: 'No Target', color: 'bg-slate-100' };
+
+  const cplRatio = cpl / targetCpl;
+
+  // 2. Relevance Check (CTR)
+  if (ctr < 0.5) { // Very low CTR
+    if (cplRatio > 1.2) return { type: 'danger', action: 'STOP', reason: 'Low Interest (CTR < 0.5%)', color: 'bg-rose-100 text-rose-700', icon: XCircle };
+    return { type: 'warning', action: 'IMPROVE HOOK', reason: 'Low CTR', color: 'bg-amber-100 text-amber-700', icon: Lightbulb };
+  }
+
+  // 3. Performance Check
+  if (cplRatio < 0.8) {
+    return { type: 'success', action: 'SCALE', reason: 'Winner (Cheap CPL)', color: 'bg-emerald-100 text-emerald-700', icon: Zap };
+  }
+  if (cplRatio <= 1.1) {
+    return { type: 'success', action: 'MAINTAIN', reason: 'On Target', color: 'bg-blue-100 text-blue-700', icon: CheckCircle };
+  }
+
+  return { type: 'danger', action: 'FIX', reason: 'Expensive', color: 'bg-rose-100 text-rose-700', icon: XCircle };
 };
 
 const TYPE_ORDER = {
@@ -547,6 +579,126 @@ const CreativeAnalysis = ({ data, targetCpl }) => {
   );
 };
 
+// --- Audience Analysis Component ---
+const AudienceAnalysis = ({ data, targetCpl }) => {
+  const [productFilter, setProductFilter] = useState('All');
+
+  // Extract Unique Products
+  const products = useMemo(() => {
+    const unique = new Set(data.map(d => d.Product).filter(Boolean));
+    return ['All', ...Array.from(unique).sort()];
+  }, [data]);
+
+  const audienceStats = useMemo(() => {
+    const stats = {};
+
+    data.forEach(row => {
+      // Filter by Product
+      if (productFilter !== 'All' && row.Product !== productFilter) return;
+
+      const interest = row.Category_Normalized || 'Unknown';
+
+      if (!stats[interest]) {
+        stats[interest] = {
+          interest,
+          cost: 0,
+          leads: 0,
+          impressions: 0,
+          clicks: 0,
+          reach: 0
+        };
+      }
+      stats[interest].cost += (row.Cost || 0);
+      stats[interest].leads += (row.Leads || 0); // Using FB Leads
+      stats[interest].impressions += (row.Impressions || 0);
+      stats[interest].clicks += (row.Clicks || 0);
+      stats[interest].reach += (row.Reach || 0);
+    });
+
+    return Object.values(stats).map(item => {
+      const cpl = item.leads > 0 ? item.cost / item.leads : 0;
+      const ctr = item.impressions > 0 ? (item.clicks / item.impressions) * 100 : 0;
+      const cvr = item.clicks > 0 ? (item.leads / item.clicks) * 100 : 0;
+      const frequency = item.reach > 0 ? item.impressions / item.reach : 0;
+
+      const rec = getAudienceRecommendation({ ...item, cpl, ctr, frequency }, targetCpl);
+
+      return { ...item, cpl, ctr, cvr, frequency, rec };
+    }).sort((a, b) => b.cost - a.cost);
+
+  }, [data, productFilter, targetCpl]);
+
+  return (
+    <div className="space-y-6 animate-fade-in-up">
+      {/* Header */}
+      <div className="glass-card p-6 rounded-2xl flex flex-col md:flex-row gap-6 items-end justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <Layers className="w-6 h-6 text-indigo-500" />
+            Smart Audience Analysis
+          </h2>
+          <p className="text-slate-500 mt-1">Deep dive into Interest & Behavior performance.</p>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Filter Product</label>
+          <select
+            className="glass-input px-3 py-2 rounded-xl text-sm min-w-[200px]"
+            value={productFilter}
+            onChange={e => setProductFilter(e.target.value)}
+          >
+            {products.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Main Table */}
+      <div className="glass-card p-0 rounded-2xl overflow-hidden">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-xs border-b border-slate-200">
+            <tr>
+              <th className="px-6 py-4">Audience / Interest</th>
+              <th className="px-6 py-4 text-center">Frequency</th>
+              <th className="px-6 py-4 text-center">CTR %</th>
+              <th className="px-6 py-4 text-center">CVR %</th>
+              <th className="px-6 py-4 text-right">Spend</th>
+              <th className="px-6 py-4 text-right">Leads</th>
+              <th className="px-6 py-4 text-right">CPL</th>
+              <th className="px-6 py-4 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {audienceStats.map((row, idx) => (
+              <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                <td className="px-6 py-4 font-bold text-slate-700">{row.interest}</td>
+                <td className="px-6 py-4 text-center text-slate-600">{row.frequency.toFixed(2)}</td>
+                <td className="px-6 py-4 text-center">
+                  <div className={`inline-block px-2 py-1 rounded ${row.ctr > 1.5 ? 'bg-green-50 text-green-700 font-bold' : row.ctr < 0.5 ? 'bg-red-50 text-red-700' : 'text-slate-600'}`}>
+                    {row.ctr.toFixed(2)}%
+                  </div>
+                </td>
+                <td className="px-6 py-4 text-center text-slate-600">{row.cvr.toFixed(2)}%</td>
+                <td className="px-6 py-4 text-right">฿{row.cost.toLocaleString()}</td>
+                <td className="px-6 py-4 text-right">{row.leads}</td>
+                <td className="px-6 py-4 text-right font-bold">฿{row.cpl.toFixed(0)}</td>
+                <td className="px-6 py-4 text-center">
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${row.rec.color}`}>
+                    {row.rec.icon && <row.rec.icon className="w-3.5 h-3.5" />}
+                    {row.rec.action}
+                  </div>
+                  <div className="text-[10px] text-slate-400 mt-1">{row.rec.reason}</div>
+                </td>
+              </tr>
+            ))}
+            {audienceStats.length === 0 && (
+              <tr><td colSpan="8" className="text-center py-8 text-slate-400">No data available</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 // --- Main Dashboard Component ---
 const Dashboard = ({ user, onLogout, users, onAddUser, onDeleteUser }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -933,7 +1085,13 @@ const Dashboard = ({ user, onLogout, users, onAddUser, onDeleteUser }) => {
               onClick={() => setActiveTab('smart-analysis')}
               className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'smart-analysis' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
             >
-              Smart Analysis
+              Smart Creative
+            </button>
+            <button
+              onClick={() => setActiveTab('smart-audience')}
+              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'smart-audience' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
+            >
+              Smart Audience
             </button>
             <button
               onClick={() => setActiveTab('intelligence')}
@@ -960,6 +1118,13 @@ const Dashboard = ({ user, onLogout, users, onAddUser, onDeleteUser }) => {
 
         {activeTab === 'smart-analysis' && (
           <CreativeAnalysis
+            data={appendData}
+            targetCpl={280}
+          />
+        )}
+
+        {activeTab === 'smart-audience' && (
+          <AudienceAnalysis
             data={appendData}
             targetCpl={280}
           />
