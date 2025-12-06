@@ -35,7 +35,7 @@ SAVING-MONEYSAVING14/6,250,561,280.5,400,PANG,Saving`;
 
 // --- Configuration ---
 const DEFAULT_USERS = [
-  { email: 'weerachit.jay@gmail.com', pass: '01Suz@!#', name: 'Jay', role: 'admin' },
+  { email: 'weerachit.jay@gmail.com', pass: 'Suza01Suz@!#', name: 'Jay', role: 'admin' },
   { email: 'admin@thailife.com', pass: 'admin1234', name: 'Admin', role: 'viewer' },
 ];
 
