@@ -528,6 +528,9 @@ const Dashboard = ({ user, onLogout, users, onAddUser, onDeleteUser }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [dataSource, setDataSource] = useState('Loading...');
   const [rawData, setRawData] = useState({ append: [], sent: [], target: [] });
+  const [appendData, setAppendData] = useState([]);
+  const [sentData, setSentData] = useState([]);
+  const [targetData, setTargetData] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // View Filter Dates
