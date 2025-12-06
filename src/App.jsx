@@ -6,7 +6,8 @@ import {
 import {
   Upload, Filter, Calculator, Calendar, DollarSign, Users, Target, TrendingUp,
   AlertCircle, FileSpreadsheet, Timer, ArrowUpRight, ArrowDownRight, Activity,
-  Zap, Brain, ChevronUp, ChevronDown, CheckCircle, XCircle, AlertTriangle, Lock, LogOut
+  Zap, Brain, ChevronUp, ChevronDown, CheckCircle, XCircle, AlertTriangle, Lock, LogOut,
+  Clock, Lightbulb, Search
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
