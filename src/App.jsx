@@ -10,6 +10,8 @@ import {
   Clock, Lightbulb, Search
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { db } from './firebase';
+import { collection, addDoc, deleteDoc, onSnapshot, doc } from 'firebase/firestore';
 
 // --- Default Snippets for Demo ---
 const SNIPPET_APPEND = `Campaign_name,Day,Ad_set_name,Ad_name,Reach,Impressions,Clicks,Website_leads,Cost,Meta_leads,Leads,Messaging_conversations_started
