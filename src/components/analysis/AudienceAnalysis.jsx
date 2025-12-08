@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Layers, ArrowUpDown, RotateCcw, Download } from 'lucide-react';
+import { Layers, ArrowUpDown, RotateCcw, Download, Sparkles, TrendingUp, AlertTriangle } from 'lucide-react';
 import { getAudienceRecommendation } from '../../utils/formatters';
 import { useSortableData } from '../../hooks/useSortableData';
 import { useExcelExport } from '../../hooks/useExcelExport';
@@ -8,6 +8,7 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
     const [productFilter, setProductFilter] = useState('All');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [breakdown, setBreakdown] = useState('None'); // New State: None | Day | Week
 
     // Auto-Init Date Range
     useEffect(() => {
@@ -28,6 +29,15 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
         return ['All', ...Array.from(unique).sort()];
     }, [data]);
 
+    // Helper: Get Start of Week (Monday)
+    const getStartOfWeek = (dateStr) => {
+        const d = new Date(dateStr);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        const monday = new Date(d.setDate(diff));
+        return monday.toISOString().split('T')[0];
+    };
+
     const audienceStats = useMemo(() => {
         const stats = {};
 
@@ -43,10 +53,24 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
             const interest = row.Category_Normalized || 'Unknown';
             const category = row.Category_Group || 'Other'; // Get Category Group
 
-            if (!stats[interest]) {
-                stats[interest] = {
+            // Determine Group Key based on Breakdown
+            let groupKey = interest;
+            let timeLabel = '';
+
+            if (breakdown === 'Day') {
+                timeLabel = date;
+                groupKey = `${interest}_${date}`;
+            } else if (breakdown === 'Week') {
+                timeLabel = getStartOfWeek(date);
+                groupKey = `${interest}_${timeLabel}`;
+            }
+
+            if (!stats[groupKey]) {
+                stats[groupKey] = {
+                    key: groupKey,
                     interest,
                     category, // Store category
+                    timeLabel: breakdown !== 'None' ? timeLabel : null, // Store date/week if applicable
                     cost: 0,
                     leads: 0,
                     impressions: 0,
@@ -54,11 +78,11 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
                     reach: 0
                 };
             }
-            stats[interest].cost += (row.Cost || 0);
-            stats[interest].leads += (row.Leads || 0); // Using FB Leads
-            stats[interest].impressions += (row.Impressions || 0);
-            stats[interest].clicks += (row.Clicks || 0);
-            stats[interest].reach += (row.Reach || 0);
+            stats[groupKey].cost += (row.Cost || 0);
+            stats[groupKey].leads += (row.Leads || 0); // Using FB Leads
+            stats[groupKey].impressions += (row.Impressions || 0);
+            stats[groupKey].clicks += (row.Clicks || 0);
+            stats[groupKey].reach += (row.Reach || 0);
         });
 
         return Object.values(stats).map(item => {
@@ -70,15 +94,75 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
             const rec = getAudienceRecommendation({ ...item, cpl, ctr, frequency }, targetCpl);
 
             return { ...item, cpl, ctr, cvr, frequency, rec };
-        }).sort((a, b) => b.cost - a.cost);
+        }).sort((a, b) => {
+            // If breakdown is active, maybe sort by Date desc first, then Cost?
+            // Or keep sorting by Cost by default. Let's stick to Cost for now.
+            if (breakdown !== 'None') {
+                // Sort by Time Label Descending (Newest first) then Cost
+                if (a.timeLabel !== b.timeLabel) {
+                    return new Date(b.timeLabel) - new Date(a.timeLabel);
+                }
+            }
+            return b.cost - a.cost;
+        });
 
-    }, [data, productFilter, startDate, endDate, targetCpl]);
+    }, [data, productFilter, startDate, endDate, targetCpl, breakdown]);
+
+    // AI Summary Logic
+    const summaryInsights = useMemo(() => {
+        if (!targetCpl) return null;
+
+        const winners = [];
+        const losers = [];
+        const fatigue = [];
+        const opportunities = [];
+
+        audienceStats.forEach(item => {
+            // Only consider meaningful spend or meaningful metrics
+            if (item.cost < 100) return; // Ignore very low spend
+
+            const cplRatio = item.cpl / targetCpl;
+
+            // Winners: Cheap CPL and Good Volume
+            if (cplRatio < 0.8 && item.leads >= 2) {
+                winners.push(`${item.interest} (CPL ฿${item.cpl.toFixed(0)})`);
+            }
+
+            // Losers: Expensive
+            if (cplRatio > 1.5 && item.leads > 0) {
+                losers.push(`${item.interest} (CPL ฿${item.cpl.toFixed(0)})`);
+            } else if (item.cost > targetCpl * 2 && item.leads === 0) {
+                losers.push(`${item.interest} (No Leads)`);
+            }
+
+            // Fatigue
+            if (item.frequency > 4) {
+                fatigue.push(`${item.interest} (Freq ${item.frequency.toFixed(1)})`);
+            }
+
+            // Opportunities: High CTR, Low Spend/Leads logic
+            if (item.ctr > 1.5 && item.cost < targetCpl * 1.5 && cplRatio < 1.0) {
+                // Good CTR, haven't spent too much yet, but looks promising or cheap enough
+                opportunities.push(`${item.interest} (CTR ${item.ctr.toFixed(1)}%)`);
+            }
+        });
+
+        // Limit to top 3 for brevity
+        return {
+            winners: winners.slice(0, 3),
+            losers: losers.slice(0, 3),
+            fatigue: fatigue.slice(0, 3),
+            opportunities: opportunities.slice(0, 3),
+            count: winners.length + losers.length + fatigue.length + opportunities.length
+        };
+    }, [audienceStats, targetCpl]);
 
     const { items: sortedAudienceStats, requestSort, sortConfig, resetSort } = useSortableData(audienceStats);
     const { exportToExcel } = useExcelExport();
 
     const handleExport = () => {
         const columns = [
+            ...(breakdown !== 'None' ? [{ key: 'timeLabel', label: breakdown === 'Day' ? 'Date' : 'Week Of' }] : []),
             { key: 'interest', label: 'Audience / Interest' },
             { key: 'category', label: 'Category' },
             { key: 'frequency', label: 'Freq', formatter: (val) => parseFloat(val.toFixed(2)) },
@@ -106,6 +190,23 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
                 </div>
                 <div className="flex flex-wrap gap-4 items-end">
                     <div>
+                        <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Breakdown</label>
+                        <div className="flex bg-slate-100 p-1 rounded-xl">
+                            {['None', 'Day', 'Week'].map(mode => (
+                                <button
+                                    key={mode}
+                                    onClick={() => setBreakdown(mode)}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${breakdown === mode
+                                        ? 'bg-white text-indigo-600 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700'
+                                        }`}
+                                >
+                                    {mode}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
                         <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Filter Product</label>
                         <select
                             className="glass-input px-3 py-2 rounded-xl text-sm min-w-[200px]"
@@ -129,28 +230,31 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
             {/* Main Table */}
             <div className="glass-card p-0 rounded-2xl overflow-hidden">
                 <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                    <h3 className="text-sm font-bold text-slate-700 uppercase">Audience Performance</h3>
-                    {sortConfig && (
+                    <h3 className="text-sm font-bold text-slate-700 uppercase">Audience Performance {breakdown !== 'None' && `(By ${breakdown})`}</h3>
+                    <div className="flex gap-2">
+                        {sortConfig && (
+                            <button
+                                onClick={resetSort}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 bg-white hover:text-indigo-600 rounded-lg transition-colors border border-slate-200 shadow-sm"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                Reset Sort
+                            </button>
+                        )}
                         <button
-                            onClick={resetSort}
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 bg-white hover:text-indigo-600 rounded-lg transition-colors border border-slate-200 shadow-sm"
+                            onClick={handleExport}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-white hover:text-indigo-800 rounded-lg transition-colors border border-slate-200 shadow-sm ml-2"
                         >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            Reset Sort
+                            <Download className="w-3.5 h-3.5" />
+                            Export
                         </button>
-                    )}
-                    <button
-                        onClick={handleExport}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-white hover:text-indigo-800 rounded-lg transition-colors border border-slate-200 shadow-sm ml-2"
-                    >
-                        <Download className="w-3.5 h-3.5" />
-                        Export
-                    </button>
+                    </div>
                 </div>
                 <table className="w-full text-sm text-left">
                     <thead className="bg-slate-50 text-slate-500 uppercase font-bold text-xs border-b border-slate-200">
                         <tr>
                             {[
+                                ...(breakdown !== 'None' ? [{ label: breakdown === 'Day' ? 'Date' : 'Week Of', key: 'timeLabel', align: 'left' }] : []),
                                 { label: 'Audience / Interest', key: 'interest', align: 'left' },
                                 { label: 'Freq', key: 'frequency', align: 'center' },
                                 { label: 'CTR', key: 'ctr', align: 'center' },
@@ -176,6 +280,11 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
                     <tbody className="divide-y divide-slate-100">
                         {sortedAudienceStats.map((row, idx) => (
                             <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                                {breakdown !== 'None' && (
+                                    <td className="px-4 py-4 font-bold text-slate-500 whitespace-nowrap">
+                                        {row.timeLabel}
+                                    </td>
+                                )}
                                 <td className="px-4 py-4 font-bold text-slate-700">
                                     {row.interest}
                                     <div className="text-[10px] uppercase tracking-wider text-indigo-500 font-bold mt-1 bg-indigo-50 inline-block px-1.5 py-0.5 rounded">
@@ -202,11 +311,76 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
                             </tr>
                         ))}
                         {sortedAudienceStats.length === 0 && (
-                            <tr><td colSpan="8" className="text-center py-8 text-slate-400">No data available</td></tr>
+                            <tr><td colSpan={breakdown === 'None' ? 8 : 9} className="text-center py-8 text-slate-400">No data available</td></tr>
                         )}
                     </tbody>
                 </table>
             </div>
+
+            {/* AI Summary Section */}
+            {summaryInsights && summaryInsights.count > 0 && (
+                <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 p-1 rounded-2xl shadow-lg">
+                    <div className="bg-white rounded-xl p-6">
+                        <h3 className="text-lg font-bold text-indigo-900 flex items-center gap-2 mb-4">
+                            <Sparkles className="w-5 h-5 text-amber-400 fill-amber-400" />
+                            AI Insight Summary
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {/* Winners */}
+                            {summaryInsights.winners.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1.5">
+                                        <TrendingUp className="w-4 h-4" />
+                                        Scale / Winners
+                                    </div>
+                                    <ul className="text-sm text-slate-600 space-y-1">
+                                        {summaryInsights.winners.map((txt, i) => <li key={i}>• {txt}</li>)}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Opportunities */}
+                            {summaryInsights.opportunities.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="text-xs font-bold text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
+                                        <Sparkles className="w-4 h-4" />
+                                        Opportunities (High CTR)
+                                    </div>
+                                    <ul className="text-sm text-slate-600 space-y-1">
+                                        {summaryInsights.opportunities.map((txt, i) => <li key={i}>• {txt}</li>)}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Losers */}
+                            {summaryInsights.losers.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="text-xs font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1.5">
+                                        <AlertTriangle className="w-4 h-4" />
+                                        Stop / Expensive
+                                    </div>
+                                    <ul className="text-sm text-slate-600 space-y-1">
+                                        {summaryInsights.losers.map((txt, i) => <li key={i}>• {txt}</li>)}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Fatigue */}
+                            {summaryInsights.fatigue.length > 0 && (
+                                <div className="space-y-2">
+                                    <div className="text-xs font-bold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
+                                        <RotateCcw className="w-4 h-4" />
+                                        Audience Fatigue
+                                    </div>
+                                    <ul className="text-sm text-slate-600 space-y-1">
+                                        {summaryInsights.fatigue.map((txt, i) => <li key={i}>• {txt}</li>)}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

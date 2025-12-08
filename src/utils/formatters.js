@@ -69,7 +69,7 @@ export const getSmartRecommendation = (stats, targetCpl) => {
 export const getAudienceRecommendation = (stats, targetCpl) => {
     const { cpl, ctr, frequency, cost, leads } = stats;
 
-    if (cost === 0) return { type: 'neutral', action: 'WAIT', reason: 'No Spend', color: 'bg-slate-100 text-slate-500' };
+    if (cost === 0 || leads === 0) return { type: 'neutral', action: '-', reason: cost === 0 ? 'No Spend' : 'No Leads', color: 'bg-slate-100 text-slate-500' };
 
     // 1. Saturation Check (High Frequency)
     if (frequency > 4.0) {

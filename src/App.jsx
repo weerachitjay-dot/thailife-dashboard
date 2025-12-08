@@ -9,6 +9,7 @@ import AudienceAnalysis from './components/analysis/AudienceAnalysis';
 import UserManagement from './components/auth/UserManagement';
 import LoginPage from './components/auth/LoginPage';
 import { DEFAULT_USERS } from './utils/constants';
+import OptimizationLabPage from './pages/OptimizationLabPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import CostProfitPage from './pages/CostProfitPage';
 import ProductMasterPage from './pages/ProductMasterPage';
@@ -40,6 +41,12 @@ const AuthenticatedApp = ({ user, onLogout, users, onAddUser, onDeleteUser }) =>
           data={appendData}
           targetCpl={280}
         />
+      )}
+
+      {activeTab === 'optimization-lab' && (
+        <ErrorBoundary>
+          <OptimizationLabPage />
+        </ErrorBoundary>
       )}
 
       {activeTab === 'intelligence' && <IntelligencePage />}

@@ -1,10 +1,20 @@
 import React from 'react';
-import { Activity, FileSpreadsheet, LogOut, Filter, Calendar } from 'lucide-react';
+import { Activity, FileSpreadsheet, LogOut, Filter, Calendar, LayoutDashboard, Database, BarChart2, PieChart, Users, Settings, Table, Clock, FlaskConical } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
     const { dataSource, handleFileUpload, filters, setFilters, dateRange, setDateRange } = useData();
 
+    const menuItems = [
+        { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
+        { id: 'smart-analysis', label: 'Creative Analysis', icon: BarChart2 },
+        { id: 'smart-audience', label: 'Smart Audience', icon: PieChart },
+        { id: 'optimization-lab', label: 'Optimization Lab', icon: FlaskConical }, // NEW
+        { id: 'intelligence', label: 'Intelligence Hub', icon: Database }, // Renamed from Raw Data
+        { id: 'time-analysis', label: 'Time Analysis', icon: Clock },
+        { id: 'cost-profit', label: 'Cost & Profit', icon: Table },
+        { id: 'product-master', label: 'Product Master', icon: Table, className: 'text-xs' }, // Smaller text if needed
+    ];
     // Extract unique options for filters if needed, but for now we can rely on what we had.
     // In App.jsx, uniqueOwners etc were derived from targetData.
     // We can access targetData from context to populate dropdowns.
@@ -53,55 +63,32 @@ const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
 
                 {/* View Switcher */}
                 <div className="flex justify-center">
-                    <div className="glass-card p-1 rounded-xl inline-flex flex-wrap justify-center">
-                        <button
-                            onClick={() => setActiveTab('dashboard')}
-                            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
-                        >
-                            Overview Dashboard
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('smart-analysis')}
-                            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'smart-analysis' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
-                        >
-                            Smart Creative
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('smart-audience')}
-                            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'smart-audience' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
-                        >
-                            Smart Audience
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('time-analysis')}
-                            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'time-analysis' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
-                        >
-                            Time Analysis
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('cost-profit')}
-                            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'cost-profit' ? 'bg-teal-600 text-white shadow-md' : 'text-slate-500 hover:text-teal-600'}`}
-                        >
-                            Cost & Profit
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('product-master')}
-                            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'product-master' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
-                        >
-                            Product Master
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('intelligence')}
-                            className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'intelligence' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
-                        >
-                            Old Intelligence
-                        </button>
+                    <div className="glass-card p-1 rounded-xl inline-flex flex-wrap justify-center gap-1">
+                        {menuItems.map(item => {
+                            // Hide User Management for non-admins if conditional logic needed, 
+                            // though simpler to just filter array or use condition inside.
+                            // Current array doesn't have 'users', it's hardcoded. Let's add 'users' to array or keep hardcoded.
+                            // The 'users' button was conditional on admin. Let's keep it manual or add it conditional.
+                            // Let's iterate menu items first.
+                            return (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setActiveTab(item.id)}
+                                    className={`flex items-center gap-2 px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === item.id ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
+                                >
+                                    {item.icon && <item.icon className="w-4 h-4" />}
+                                    <span className={item.className}>{item.label}</span>
+                                </button>
+                            );
+                        })}
+
                         {user?.role === 'admin' && (
                             <button
                                 onClick={() => setActiveTab('users')}
-                                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
+                                className={`flex items-center gap-2 px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-indigo-600'}`}
                             >
-                                Manage Users
+                                <Users className="w-4 h-4" />
+                                <span>Manage Users</span>
                             </button>
                         )}
                     </div>
