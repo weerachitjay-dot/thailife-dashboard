@@ -218,8 +218,19 @@ const DashboardOverview = () => {
                         <h3 className="text-xl font-bold text-slate-800">Forecast & Projections</h3>
                         <div className="flex items-center gap-2 mt-2 text-sm text-slate-500">
                             <span>Based on run rate from</span>
+                            <input
+                                type="date"
+                                className="bg-white/50 border border-slate-200 rounded px-2 py-0.5 text-xs text-indigo-600 font-bold"
+                                value={campaignConfig.start}
+                                onChange={e => setCampaignConfig(prev => ({ ...prev, start: e.target.value }))}
+                            />
                             <span>to</span>
-                            <input type="date" className="bg-white/50 border border-slate-200 rounded px-2 py-0.5 text-xs text-indigo-600 font-bold" value={campaignConfig.end} onChange={e => setCampaignConfig(prev => ({ ...prev, end: e.target.value }))} />
+                            <input
+                                type="date"
+                                className="bg-white/50 border border-slate-200 rounded px-2 py-0.5 text-xs text-indigo-600 font-bold"
+                                value={campaignConfig.end}
+                                onChange={e => setCampaignConfig(prev => ({ ...prev, end: e.target.value }))}
+                            />
                         </div>
                     </div>
                     <button
