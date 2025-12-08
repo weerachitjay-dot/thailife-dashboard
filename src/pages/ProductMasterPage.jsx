@@ -129,7 +129,7 @@ const ProductMasterPage = () => {
 
             // Calculate Daily Computed Metrics
             Object.values(group.days).forEach(day => {
-                day.revenue = day.leadsSent * sellPrice;
+                day.revenue = day.leadsTL * sellPrice;
                 day.profit = day.revenue - day.spend;
                 day.roi = day.spend > 0 ? (day.profit / day.spend) * 100 : 0;
 
@@ -142,7 +142,7 @@ const ProductMasterPage = () => {
             });
 
             // Calculate Group Computed Metrics
-            group.total.revenue = group.total.leadsSent * sellPrice;
+            group.total.revenue = group.total.leadsTL * sellPrice;
             group.total.profit = group.total.revenue - group.total.spend;
             group.total.roi = group.total.spend > 0 ? (group.total.profit / group.total.spend) * 100 : 0;
 
