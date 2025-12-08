@@ -11,12 +11,14 @@ const AudienceAnalysis = ({ data, targetCpl }) => {
 
     // Auto-Init Date Range
     useEffect(() => {
-        if (data && data.length > 0) {
-            const dates = data.map(d => d.Day).filter(Boolean).sort();
-            if (dates.length > 0) {
-                if (!startDate) setStartDate(dates[0]);
-                if (!endDate) setEndDate(dates[dates.length - 1]);
-            }
+        if (!data || data.length === 0) return;
+
+        const dates = data.map(d => d.Day).filter(Boolean).sort();
+        if (dates.length > 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setStartDate(prev => prev || dates[0]);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setEndDate(prev => prev || dates[dates.length - 1]);
         }
     }, [data]);
 
