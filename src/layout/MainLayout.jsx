@@ -1,6 +1,7 @@
 import React from 'react';
 import { Activity, FileSpreadsheet, LogOut, Filter, Calendar, LayoutDashboard, Database, BarChart2, PieChart, Users, Settings, Table, Clock, FlaskConical } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import DateRangePicker from '../components/common/DateRangePicker';
 
 const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
     const { dataSource, handleFileUpload, filters, setFilters, dateRange, setDateRange } = useData();
@@ -119,16 +120,16 @@ const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-4 glass-card p-6 rounded-2xl">
-                            <div className="flex items-center gap-2 mb-4">
+                        <div className="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-center items-end relative z-50">
+                            <div className="flex items-center gap-2 mb-4 w-full justify-end">
                                 <Calendar className="w-4 h-4 text-rose-500" />
                                 <label className="text-xs font-bold uppercase text-rose-500 tracking-wider">View Range</label>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <input type="date" className="glass-input flex-1 px-3 py-2 rounded-lg text-sm text-slate-600" value={dateRange.start} onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))} />
-                                <span className="text-slate-400 font-bold">→</span>
-                                <input type="date" className="glass-input flex-1 px-3 py-2 rounded-lg text-sm text-slate-600" value={dateRange.end} onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))} />
-                            </div>
+                            <DateRangePicker
+                                startDate={dateRange.start}
+                                endDate={dateRange.end}
+                                onChange={(newRange) => setDateRange(prev => ({ ...prev, ...newRange }))}
+                            />
                         </div>
                     </div>
                 )}
