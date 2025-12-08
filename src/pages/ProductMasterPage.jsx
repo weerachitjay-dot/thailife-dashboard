@@ -216,7 +216,7 @@ const ProductMasterPage = () => {
                 Profit: g.total.profit,
                 ROI: g.total.roi
             });
-            Object.values(g.days).sort((a, b) => b.date.localeCompare(a.date)).forEach(d => {
+            Object.values(g.days).sort((a, b) => a.date.localeCompare(b.date)).forEach(d => {
                 rows.push({
                     Type: 'Daily',
                     Date: d.date,
@@ -397,7 +397,7 @@ const ProductMasterPage = () => {
 
                                         {/* CHILD ROWS (DAILY) */}
                                         {expandedProducts[group.name] && Object.values(group.days)
-                                            .sort((a, b) => b.date.localeCompare(a.date)) // Sort Descending Date
+                                            .sort((a, b) => a.date.localeCompare(b.date)) // Sort Ascending Date
                                             .map(day => (
                                                 <tr key={day.date} className="bg-white hover:bg-gray-50 transition-colors animate-fade-in-down">
                                                     <td className="px-6 py-2 whitespace-nowrap sticky left-0 bg-white z-10 border-r border-gray-100 text-sm text-gray-500 pl-12 border-l-4 border-l-transparent hover:border-l-indigo-400 shadow-sm">
