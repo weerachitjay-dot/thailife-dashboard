@@ -54,16 +54,34 @@ const DashboardOverview = () => {
     // --- FORECAST DATA ---
     const forecastData = useMemo(() => {
         const allDates = [...appendData.map(d => d.Day), ...sentData.map(d => d.Day)].sort();
-        const lastDataDate = allDates.length ? allDates[allDates.length - 1] : campaignConfig.start;
+        // Correct Logic: Forecast is "Run Rate so far" extended to "End of Period".
+        // The "Run Rate" is based on data from Start Date -> Today.
+
         const start = new Date(campaignConfig.start);
         const end = new Date(campaignConfig.end);
-        const current = new Date(lastDataDate);
+        const today = new Date();
+
+        // Normalize time to midnight to avoid partial day errors
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
 
         if (isNaN(start.getTime()) || isNaN(end.getTime())) return { rows: [], totals: {} };
 
-        const totalDays = Math.max(1, (end - start) / (1000 * 60 * 60 * 24) + 1);
-        const daysElapsed = Math.max(1, Math.min(totalDays, (current - start) / (1000 * 60 * 60 * 24) + 1));
-        const daysRemaining = Math.max(0, totalDays - daysElapsed);
+        // 1. Total Duration of the selected Campaign Period
+        const totalDuration = Math.max(1, (end - start) / (1000 * 60 * 60 * 24) + 1);
+
+        // 2. Days Elapsed: How many days of data do we have? 
+        // Logic: From Start Date until Today (clamped). 
+        // If Today is after End, we have full duration. If Today is before Start, we have 0 (or 1 to avoid div0).
+        let processingDate = today > end ? end : today;
+        if (processingDate < start) processingDate = start; // Should not happen usually if selecting future
+
+        const daysElapsed = Math.max(1, (processingDate - start) / (1000 * 60 * 60 * 24) + 1);
+
+        // 3. Days Remaining: How many days left to forecast?
+        // Logic: Total - Elapsed.
+        const daysRemaining = Math.max(0, totalDuration - daysElapsed);
 
         const agg = {};
         sentData.forEach(row => {
