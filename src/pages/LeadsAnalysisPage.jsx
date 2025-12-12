@@ -9,7 +9,7 @@ const LeadsAnalysisPage = () => {
     const { exportToExcel } = useExcelExport();
 
     // View State
-    const [viewMode, setViewMode] = useState('LEADS_META'); // Options: LEADS_META, CPL_META, LEADS_SENT, CPL_SENT, LEADS_TL, CPL_TL
+    const [viewMode, setViewMode] = useState('LEADS_META'); // Options: LEADS_META, COST_META, CPL_META, LEADS_SENT, CPL_SENT, LEADS_TL, CPL_TL
     const [breakdown, setBreakdown] = useState('Day'); // Options: Day, Week
 
     // Helper: Get Week Info
@@ -146,6 +146,7 @@ const LeadsAnalysisPage = () => {
         if (!metrics) return 0;
         switch (viewMode) {
             case 'LEADS_META': return metrics.leadsMeta;
+            case 'COST_META': return metrics.cost;
             case 'CPL_META': return metrics.leadsMeta > 0 ? metrics.cost / metrics.leadsMeta : 0;
             case 'LEADS_SENT': return metrics.leadsSent;
             case 'CPL_SENT': return metrics.leadsSent > 0 ? metrics.cost / metrics.leadsSent : 0;
@@ -156,7 +157,7 @@ const LeadsAnalysisPage = () => {
     };
 
     const formatValue = (val) => {
-        if (viewMode.includes('CPL')) {
+        if (viewMode.includes('CPL') || viewMode.includes('COST')) {
             return `฿${val.toFixed(0)}`;
         }
         return val.toLocaleString();
@@ -165,6 +166,7 @@ const LeadsAnalysisPage = () => {
     const getViewTitle = () => {
         switch (viewMode) {
             case 'LEADS_META': return 'Meta Leads';
+            case 'COST_META': return 'Meta Cost';
             case 'CPL_META': return 'CPL Meta';
             case 'LEADS_SENT': return 'Leads Sent';
             case 'CPL_SENT': return 'CPL (Sent)';
@@ -176,8 +178,8 @@ const LeadsAnalysisPage = () => {
 
     const getCellColor = (val, isTotal = false) => {
         if (val === 0) return 'text-gray-300';
-        if (viewMode.includes('CPL')) {
-            if (val > 500) return 'text-red-600 font-bold'; // Arbitrary threshold for visual pop
+        if (viewMode.includes('CPL') || viewMode.includes('COST')) {
+            if (viewMode.includes('CPL') && val > 500) return 'text-red-600 font-bold'; // Only red for high CPL
             return isTotal ? 'text-indigo-700 font-bold' : 'text-gray-900';
         }
         return isTotal ? 'text-indigo-700 font-bold' : 'text-gray-900';
@@ -217,6 +219,7 @@ const LeadsAnalysisPage = () => {
                 <div className="flex bg-slate-100 p-1 rounded-lg gap-1 overflow-x-auto max-w-full">
                     {[
                         { id: 'LEADS_META', label: 'Meta Leads' },
+                        { id: 'COST_META', label: 'Meta Cost' },
                         { id: 'CPL_META', label: 'Meta CPL' },
                         { id: 'LEADS_SENT', label: 'Sent Leads' },
                         { id: 'CPL_SENT', label: 'Sent CPL' },
@@ -227,8 +230,8 @@ const LeadsAnalysisPage = () => {
                             key={btn.id}
                             onClick={() => setViewMode(btn.id)}
                             className={`px-3 py-1.5 text-xs font-bold rounded-md whitespace-nowrap transition-all ${viewMode === btn.id
-                                    ? 'bg-white text-indigo-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white text-indigo-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             {btn.label}
@@ -243,8 +246,8 @@ const LeadsAnalysisPage = () => {
                             key={b}
                             onClick={() => setBreakdown(b)}
                             className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${breakdown === b
-                                    ? 'bg-white text-indigo-600 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                ? 'bg-white text-indigo-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
                                 }`}
                         >
                             {b}
