@@ -97,29 +97,33 @@ const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
                 </div>
 
                 {/* Global Filter Bar (Conditionally Rendered) */}
-                {activeTab !== 'users' && activeTab !== 'smart-analysis' && activeTab !== 'product-master' && activeTab !== 'leads-analysis' && (
+                {activeTab !== 'users' && activeTab !== 'smart-analysis' && activeTab !== 'product-master' && (
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <div className="lg:col-span-8 glass-card p-6 rounded-2xl flex flex-col justify-center">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Filter className="w-4 h-4 text-indigo-500" />
-                                <label className="text-xs font-bold uppercase text-indigo-500 tracking-wider">Data Segments</label>
+                        {activeTab !== 'leads-analysis' ? (
+                            <div className="lg:col-span-8 glass-card p-6 rounded-2xl flex flex-col justify-center">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Filter className="w-4 h-4 text-indigo-500" />
+                                    <label className="text-xs font-bold uppercase text-indigo-500 tracking-wider">Data Segments</label>
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    <select className="glass-input px-4 py-2 rounded-lg text-sm font-medium text-slate-700 w-full sm:w-auto" value={filters.owner} onChange={e => setFilters({ ...filters, owner: e.target.value })}>
+                                        <option value="All">All Owners</option>
+                                        {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
+                                    </select>
+                                    <select className="glass-input px-4 py-2 rounded-lg text-sm font-medium text-slate-700 w-full sm:w-auto" value={filters.type} onChange={e => setFilters({ ...filters, type: e.target.value })}>
+                                        <option value="All">All Types</option>
+                                        {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                    <select className="glass-input px-4 py-2 rounded-lg text-sm font-medium text-slate-700 w-full sm:w-auto flex-grow" value={filters.product} onChange={e => setFilters({ ...filters, product: e.target.value })}>
+                                        <option value="All">All Products</option>
+                                        {uniqueProducts.map(p => <option key={p} value={p}>{p}</option>)}
+                                    </select>
+                                    <button onClick={() => setFilters({ owner: 'All', type: 'All', product: 'All' })} className="px-4 py-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold transition-colors">Reset</button>
+                                </div>
                             </div>
-                            <div className="flex flex-wrap gap-3">
-                                <select className="glass-input px-4 py-2 rounded-lg text-sm font-medium text-slate-700 w-full sm:w-auto" value={filters.owner} onChange={e => setFilters({ ...filters, owner: e.target.value })}>
-                                    <option value="All">All Owners</option>
-                                    {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
-                                </select>
-                                <select className="glass-input px-4 py-2 rounded-lg text-sm font-medium text-slate-700 w-full sm:w-auto" value={filters.type} onChange={e => setFilters({ ...filters, type: e.target.value })}>
-                                    <option value="All">All Types</option>
-                                    {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
-                                </select>
-                                <select className="glass-input px-4 py-2 rounded-lg text-sm font-medium text-slate-700 w-full sm:w-auto flex-grow" value={filters.product} onChange={e => setFilters({ ...filters, product: e.target.value })}>
-                                    <option value="All">All Products</option>
-                                    {uniqueProducts.map(p => <option key={p} value={p}>{p}</option>)}
-                                </select>
-                                <button onClick={() => setFilters({ owner: 'All', type: 'All', product: 'All' })} className="px-4 py-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold transition-colors">Reset</button>
-                            </div>
-                        </div>
+                        ) : (
+                            <div className="lg:col-span-8 hidden lg:block" />
+                        )}
 
                         <div className="lg:col-span-4 glass-card p-6 rounded-2xl flex flex-col justify-center items-end relative z-50">
                             <div className="flex items-center gap-2 mb-4 w-full justify-end">
