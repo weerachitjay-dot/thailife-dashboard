@@ -128,19 +128,26 @@ export const syncSheetToSupabase = async (type) => {
 
     if (!tableName) throw new Error(`Unknown table for type ${type}`);
 
-    const { error } = await supabase
-        .from(tableName)
-        .upsert(rowsToInsert, {
-            // Composite keys define uniqueness for upsert
-            // append: day, product, ad_name
-            // sent: day, product
-            // target: product_target
-            // time: day, time, ad_name
-            // telesales: day, product
-            ignoreDuplicates: false
-        });
+    // Batch Processing to avoid Timeouts (Limit ~1000 rows per batch)
+    const BATCH_SIZE = 1000;
+    let successCount = 0;
 
-    if (error) throw error;
+    for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
+        const chunk = rowsToInsert.slice(i, i + BATCH_SIZE);
+        console.log(`Upserting batch ${i / BATCH_SIZE + 1} of ${Math.ceil(rowsToInsert.length / BATCH_SIZE)}...`);
 
-    return { success: true, count: rowsToInsert.length };
+        const { error } = await supabase
+            .from(tableName)
+            .upsert(chunk, {
+                ignoreDuplicates: false
+            });
+
+        if (error) {
+            console.error(`Error upserting batch ${i}:`, error);
+            throw error;
+        }
+        successCount += chunk.length;
+    }
+
+    return { success: true, count: successCount };
 };
