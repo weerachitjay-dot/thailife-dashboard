@@ -156,11 +156,11 @@ export const syncSheetToSupabase = async (type) => {
     switch (type) {
         case 'append':
             tableName = SUPABASE_TABLES.APPEND;
-            conflictColumns = 'day, product, ad_name';
+            conflictColumns = 'day,product,ad_name';
             break;
         case 'sent':
             tableName = SUPABASE_TABLES.SENT;
-            conflictColumns = 'day, product';
+            conflictColumns = 'day,product';
             break;
         case 'target':
             tableName = SUPABASE_TABLES.TARGETS;
@@ -168,23 +168,45 @@ export const syncSheetToSupabase = async (type) => {
             break;
         case 'append_time':
             tableName = SUPABASE_TABLES.TIME_ANALYSIS;
-            conflictColumns = 'day, time_of_day, ad_id';
+            conflictColumns = 'day,time_of_day,ad_id';
             break;
         case 'telesales':
             tableName = SUPABASE_TABLES.TELESALES;
-            conflictColumns = 'day, product';
+            conflictColumns = 'day,product';
             break;
     }
 
     if (!tableName) throw new Error(`Unknown table for type ${type}`);
 
+    // Deduplicate rows based on conflict columns to prevent intra-batch conflicts
+    // This is crucial because Postgres raises error if multiple rows in the same INSERT target the same conflict target.
+    const uniqueRowsMap = new Map();
+    rowsToInsert.forEach(row => {
+        let key = '';
+        if (type === 'append') key = `${row.day}|${row.product}|${row.ad_name}`;
+        else if (type === 'sent') key = `${row.day}|${row.product}`;
+        else if (type === 'target') key = `${row.product_target}`;
+        else if (type === 'append_time') key = `${row.day}|${row.time_of_day}|${row.ad_id}`;
+        else if (type === 'telesales') key = `${row.day}|${row.product}`;
+
+        // Validation: If key components are missing, should we skip?
+        // Suppress rows with critical missing keys to avoid DB errors (e.g. NULL product in append)
+        // But for append_time, ad_id might be null? If unique index handles nulls as distinct, logging key with "undefined" works.
+        // However, if we want to overwrite, we assume last one wins.
+        uniqueRowsMap.set(key, row);
+    });
+
+    // Log deduplication stats
+    console.log(`Deduplication: ${rowsToInsert.length} -> ${uniqueRowsMap.size} rows`);
+    const uniqueRows = Array.from(uniqueRowsMap.values());
+
     // Batch Processing to avoid Timeouts (Limit ~1000 rows per batch)
     const BATCH_SIZE = 1000;
     let successCount = 0;
 
-    for (let i = 0; i < rowsToInsert.length; i += BATCH_SIZE) {
-        const chunk = rowsToInsert.slice(i, i + BATCH_SIZE);
-        console.log(`Upserting batch ${i / BATCH_SIZE + 1} of ${Math.ceil(rowsToInsert.length / BATCH_SIZE)}...`);
+    for (let i = 0; i < uniqueRows.length; i += BATCH_SIZE) {
+        const chunk = uniqueRows.slice(i, i + BATCH_SIZE);
+        console.log(`Upserting batch ${i / BATCH_SIZE + 1} of ${Math.ceil(uniqueRows.length / BATCH_SIZE)}...`);
 
         const { error } = await supabase
             .from(tableName)
