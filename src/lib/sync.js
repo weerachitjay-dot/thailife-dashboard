@@ -51,15 +51,27 @@ const mapRow = (type, row) => {
     switch (type) {
         case 'append':
             // CSV: Day, Product, Ad Name, Impressions, Cost, Leads, Meta_leads
-            // DB: day, product, ad_name, impressions, cost, leads, meta_leads
+            // DB: day, product, ad_name, impressions, cost, leads, meta_leads, row_hash
+            const day = getVal(['Day', 'day']);
+            const product = getVal(['Product', 'product', 'Product_Normalized']);
+            const adName = getVal(['Ad Name', 'Ad_Name', 'ad_name', 'ad name']);
+            const impressions = parseInt(getVal(['Impressions', 'impressions']) || 0);
+            const cost = parseFloat(getVal(['Cost', 'cost']) || 0);
+            const leads = parseInt(getVal(['Leads', 'leads']) || 0);
+            const metaLeads = parseInt(getVal(['Meta_leads', 'Meta Leads', 'meta_leads']) || 0);
+
+            // Generate unique row_hash from ALL columns to prevent aggregation
+            const rowHash = `${day}|${product}|${adName}|${impressions}|${cost}|${leads}|${metaLeads}`;
+
             return {
-                day: getVal(['Day', 'day']),
-                product: getVal(['Product', 'product', 'Product_Normalized']),
-                ad_name: getVal(['Ad Name', 'Ad_Name', 'ad_name', 'ad name']),
-                impressions: parseInt(getVal(['Impressions', 'impressions']) || 0),
-                cost: parseFloat(getVal(['Cost', 'cost']) || 0),
-                leads: parseInt(getVal(['Leads', 'leads']) || 0),
-                meta_leads: parseInt(getVal(['Meta_leads', 'Meta Leads', 'meta_leads']) || 0)
+                day,
+                product,
+                ad_name: adName,
+                impressions,
+                cost,
+                leads,
+                meta_leads: metaLeads,
+                row_hash: rowHash
             };
         case 'sent':
             // CSV: Day, Product, Leads_Sent
@@ -159,7 +171,7 @@ export const syncSheetToSupabase = async (type) => {
     switch (type) {
         case 'append':
             tableName = SUPABASE_TABLES.APPEND;
-            conflictColumns = 'day,product,ad_name';
+            conflictColumns = 'row_hash'; // Changed: Use row_hash for unique row identification
             break;
         case 'sent':
             tableName = SUPABASE_TABLES.SENT;
@@ -187,7 +199,7 @@ export const syncSheetToSupabase = async (type) => {
 
     rowsToInsert.forEach(row => {
         let key = '';
-        if (type === 'append') key = `${row.day}|${row.product}|${row.ad_name}`;
+        if (type === 'append') key = row.row_hash; // Use row_hash for unique identification
         else if (type === 'sent') key = `${row.day}|${row.product}`;
         else if (type === 'target') key = `${row.product_target}`;
         else if (type === 'append_time') key = `${row.day}|${row.time_of_day}|${row.ad_id}`;
