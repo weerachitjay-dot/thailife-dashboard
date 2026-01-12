@@ -190,21 +190,11 @@ export const syncSheetToSupabase = async (type) => {
         if (type === 'append') key = `${row.day}|${row.product}|${row.ad_name}`;
         else if (type === 'sent') key = `${row.day}|${row.product}`;
         else if (type === 'target') key = `${row.product_target}`;
-        else if (type === 'append_time') {
-            // User Request: Focus ONLY on Campaign Level. Ignore Ad/AdSet.
-            // Aggregation Key: Day + Time + Campaign Name
-            // Note: Product is implicit in Campaign Name, so it remains consistent per key.
-            key = `${row.day}|${row.time_of_day}|${row.campaign_name}`;
-
-            // Override Ad details with Campaign info for DB compatibility (Unique Constraint: day, time, ad_id)
-            row.ad_id = row.campaign_id || row.campaign_name; // Use Campaign ID as the unique "ID"
-            row.ad_name = row.campaign_name;                  // Ad Name is now Campaign Name
-        }
+        else if (type === 'append_time') key = `${row.day}|${row.time_of_day}|${row.ad_id}`;
         else if (type === 'telesales') key = `${row.day}|${row.product}`;
 
         // Skip if critical key is missing
         if (type === 'append' && !row.product) return; // Example safety
-        if (type === 'append_time' && !row.campaign_name) return; // Must have campaign name
 
         if (uniqueRowsMap.has(key)) {
             // Aggregate
@@ -255,7 +245,7 @@ export const syncSheetToSupabase = async (type) => {
         const { error } = await supabase
             .from(tableName)
             .upsert(chunk, {
-                ignoreDuplicates: false,
+                ignoreDuplicates: true, // Changed: Skip duplicates instead of overwriting
                 onConflict: conflictColumns
             });
 
