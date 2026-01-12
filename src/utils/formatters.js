@@ -229,10 +229,10 @@ export const processAppendData = (data, mappings = []) => {
         const campName = row.Campaign_name || row.Campaign_Name || row.campaign_name || '';
         const rawTime = row.Time || row.Time_of_Day || row.time_of_day || '';
 
-        // Normalize IDs if present (Supabase)
-        const campaignId = row.Campaign_ID || row.campaign_id || '';
-        const adSetId = row.Ad_Set_ID || row.ad_set_id || '';
-        const adId = row.Ad_ID || row.ad_id || '';
+        // Normalize IDs if present (Supabase or CSV variations)
+        const campaignId = row.Campaign_ID || row.campaign_id || row['Campaign ID'] || '';
+        const adSetId = row.Ad_Set_ID || row.ad_set_id || row['Ad Set ID'] || '';
+        const adId = row.Ad_ID || row.ad_id || row['Ad ID'] || '';
 
         const { category, interest } = parseAdSetInterest(adSetName);
         const creativeMatch = adName.match(/_(.*)/);
