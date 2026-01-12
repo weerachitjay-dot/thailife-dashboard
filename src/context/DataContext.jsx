@@ -18,6 +18,8 @@ export const DataProvider = ({ children }) => {
     const [appendTimeData, setAppendTimeData] = useState([]);
     const [telesalesData, setTelesalesData] = useState([]);
 
+    const [productMappings, setProductMappings] = useState([]);
+
     const [dateRange, setDateRange] = useState({ start: '', end: '' });
     const [filters, setFilters] = useState({
         owner: 'All',
@@ -32,6 +34,22 @@ export const DataProvider = ({ children }) => {
     useEffect(() => {
         const loadDefaultData = async () => {
             try {
+                // Fetch Product Mappings First
+                let mappings = [];
+                if (supabase) {
+                    try {
+                        const { data: mappingData } = await supabase
+                            .from('product_mappings')
+                            .select('*')
+                            .eq('is_active', true)
+                            .order('priority', { ascending: false });
+                        if (mappingData) {
+                            mappings = mappingData;
+                            setProductMappings(mappings);
+                        }
+                    } catch (e) { console.warn('Mappings load failed', e); }
+                }
+
                 const fetchData = async (baseName) => {
                     const gid = SHEET_CONFIG.GIDS[baseName];
 
@@ -72,6 +90,7 @@ export const DataProvider = ({ children }) => {
 
                     return null;
                 };
+
                 const fetchSupabaseData = async (tableKey) => {
                     const tableName = SUPABASE_TABLES[tableKey];
                     if (!tableName) return null;
@@ -131,15 +150,16 @@ export const DataProvider = ({ children }) => {
 
                 setRawData({ append: parsedAppend, sent: parsedSent, target: parsedTarget, appendTime: parsedAppendTime, telesales: parsedTelesales });
 
-                const processedAppend = processAppendData(parsedAppend);
-                const processedAppendTime = processAppendData(parsedAppendTime);
+                const processedAppend = processAppendData(parsedAppend, mappings);
+                const processedAppendTime = processAppendData(parsedAppendTime, mappings);
 
                 // Process Telesales (Use same normalizer as Sent)
                 // Assuming schema: Day, Product, Leads_TL
                 const processedTelesales = parsedTelesales.map(row => ({
                     ...row,
-                    Product_Normalized: processSentData([row])[0]?.Product_Normalized // Reuse logic if possible, or just call normalizer
+                    Product_Normalized: processSentData([row], mappings)[0]?.Product_Normalized // Reuse logic if possible, or just call normalizer
                 }));
+
                 // Wait, processSentData maps 'Product1' -> Normalized. Let's see what keys we expect from TL.
                 // If the user didn't specify schema, we can assume standard or robustly normalize 'Product' column.
 
@@ -161,7 +181,7 @@ export const DataProvider = ({ children }) => {
                     setCampaignConfig(prev => ({ ...prev, start: allDates[0], end: allDates[allDates.length - 1] }));
                 }
 
-                setSentData(processSentData(parsedSent));
+                setSentData(processSentData(parsedSent, mappings));
                 setTargetData(parsedTarget);
 
             } catch (err) {
@@ -183,7 +203,7 @@ export const DataProvider = ({ children }) => {
         const processContent = (csvText) => {
             const parsed = parseCSV(csvText);
             if (type === 'append') {
-                const processed = processAppendData(parsed);
+                const processed = processAppendData(parsed, productMappings);
                 setAppendData(processed);
                 setRawData(prev => ({ ...prev, append: parsed }));
 
@@ -194,13 +214,13 @@ export const DataProvider = ({ children }) => {
                 }
 
             } else if (type === 'sent') {
-                setSentData(processSentData(parsed));
+                setSentData(processSentData(parsed, productMappings));
                 setRawData(prev => ({ ...prev, sent: parsed }));
             } else if (type === 'target') {
                 setTargetData(parsed);
                 setRawData(prev => ({ ...prev, target: parsed }));
             } else if (type === 'append_time') {
-                setAppendTimeData(processAppendData(parsed));
+                setAppendTimeData(processAppendData(parsed, productMappings));
                 setRawData(prev => ({ ...prev, appendTime: parsed }));
             }
             setDataSource('Manual Upload');
@@ -232,6 +252,7 @@ export const DataProvider = ({ children }) => {
             sentData,
             targetData,
             telesalesData,
+            productMappings, // Expose mappings
             campaignConfig,
             setCampaignConfig, // Allow updating config
             handleFileUpload,

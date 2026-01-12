@@ -111,8 +111,31 @@ export const syncSheetToSupabase = async (type) => {
     const parsedData = parseCSV(csvText);
     if (!parsedData || parsedData.length === 0) throw new Error(`Empty CSV for ${type}`);
 
-    // Transform
-    const rowsToInsert = parsedData.map(row => mapRow(type, row)).filter(r => r);
+    // Fetch Product Mappings
+    let mappings = [];
+    try {
+        const { data: mappingData, error: mappingError } = await supabase
+            .from('product_mappings')
+            .select('*')
+            .eq('is_active', true)
+            .order('priority', { ascending: false });
+
+        if (mappingData) mappings = mappingData;
+    } catch (e) {
+        console.warn('Failed to fetch product mappings for sync', e);
+    }
+
+    // Transform & Enrich
+    // We need to enrich specific types that require Product derivation (append, sent)
+    let enrichedData = parsedData;
+    if (type === 'append') {
+        enrichedData = processAppendData(parsedData, mappings);
+    } else if (type === 'sent') {
+        enrichedData = processSentData(parsedData, mappings);
+    }
+
+    // Map to DB Schema
+    const rowsToInsert = enrichedData.map(row => mapRow(type, row)).filter(r => r);
 
     // Batch Upsert
     // Supabase limits batch size? Usually 1000s is fine.

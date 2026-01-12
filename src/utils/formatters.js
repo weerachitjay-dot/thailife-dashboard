@@ -117,9 +117,29 @@ export const parseCSV = (csvText) => {
     });
 };
 
-export const normalizeProduct = (productRaw) => {
+export const normalizeProduct = (productRaw, mappings = []) => {
     if (!productRaw) return 'Unknown';
     const p = productRaw.trim();
+
+    // 1. Dynamic Mapping from Database
+    if (mappings && mappings.length > 0) {
+        // Assume mappings are already sorted by priority desc, or sort here
+        // We'll trust the caller to pass them sorted for performance, or sort once.
+        // Let's safe-guard and filter for active ones.
+        for (const map of mappings) {
+            // alias_type check (default to 'contains')
+            if (!map.alias) continue;
+
+            if (map.alias_type === 'exact') {
+                if (p.toLowerCase() === map.alias.toLowerCase()) return map.product_code;
+            } else {
+                // contains
+                if (p.toLowerCase().includes(map.alias.toLowerCase())) return map.product_code;
+            }
+        }
+    }
+
+    // 2. Hardcoded Fallback (Legacy)
     if (/แฮปปี้|HAPPY/gi.test(p)) return "SAVING-HAPPY";
     if (/14\/6|มันนี่|เซฟวิ่ง|money.?saving|ออม/gi.test(p)) return "SAVING-MONEYSAVING14/6";
     if (/เติมเงิน|top.?up/gi.test(p)) return "HEALTH-TOPUP-SICK";
@@ -127,6 +147,7 @@ export const normalizeProduct = (productRaw) => {
     if (/สูงวัยมีทรัพย์|buphakari/gi.test(p)) return "LIFE-EXTRASENIOR-BUPHAKARI";
     if (/โบนแคร์|bone.?care/gi.test(p)) return "LIFE-SENIOR-BONECARE";
     if (/ไร้กังวล|สูงวัยไร้กังวล|มรดก|moradok|morradok/gi.test(p)) return "LIFE-SENIOR-MORRADOK";
+
     return p;
 };
 
@@ -200,7 +221,7 @@ export const extractProductFromCampaign = (campaignName) => {
     return cleanPart;
 };
 
-export const processAppendData = (data) => {
+export const processAppendData = (data, mappings = []) => {
     return data.map(row => {
         // Handle case-insensitive or variation in headers from real CSV vs Snippets vs Supabase snake_case
         const adSetName = row.Ad_set_name || row.Ad_Set_Name || row.ad_set_name || '';
@@ -218,7 +239,7 @@ export const processAppendData = (data) => {
 
         // Use new robust extraction
         const rawProduct = extractProductFromCampaign(campName);
-        const productNormalized = normalizeProduct(rawProduct);
+        const productNormalized = normalizeProduct(rawProduct, mappings);
 
         // Partner extraction (heuristic: keep existing simple logic or improve later)
         const partnerMatch = campName.match(/_(.*?)\+/);
@@ -250,10 +271,10 @@ export const processAppendData = (data) => {
     });
 };
 
-export const processSentData = (data) => {
+export const processSentData = (data, mappings = []) => {
     return data.map(row => ({
         ...row,
-        Product_Normalized: normalizeProduct(row.Product1),
+        Product_Normalized: normalizeProduct(row.Product1, mappings),
         Day: row.Day
     }));
 };
