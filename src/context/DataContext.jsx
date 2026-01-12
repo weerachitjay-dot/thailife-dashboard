@@ -170,6 +170,10 @@ export const DataProvider = ({ children }) => {
                 setAppendData(processedAppend);
                 setAppendTimeData(processedAppendTime);
 
+                console.log('DEBUG: appendTimeRes:', appendTimeRes);
+                console.log('DEBUG: processedAppendTime (Sample):', processedAppendTime[0]);
+                console.log('DEBUG: All Dates:', allDates);
+
                 // Auto-set Date Range (Union of both datasets)
                 const appendDates = processedAppend.map(d => d.Day).filter(Boolean);
                 const timeDates = processedAppendTime.map(d => d.Day).filter(Boolean);
