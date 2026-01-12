@@ -227,6 +227,7 @@ export const extractProductFromCampaign = (campaignName) => {
 };
 
 export const processAppendData = (data, mappings = []) => {
+    if (!Array.isArray(data)) return [];
     return data.map(row => {
         // Handle case-insensitive or variation in headers from real CSV vs Snippets vs Supabase snake_case
         const adSetName = row.Ad_set_name || row.Ad_Set_Name || row.ad_set_name || row['Ad Set Name'] || '';
@@ -287,6 +288,7 @@ export const processAppendData = (data, mappings = []) => {
 };
 
 export const processSentData = (data, mappings = []) => {
+    if (!Array.isArray(data)) return [];
     return data.map(row => ({
         ...row,
         Product_Normalized: normalizeProduct(row.Product1, mappings),

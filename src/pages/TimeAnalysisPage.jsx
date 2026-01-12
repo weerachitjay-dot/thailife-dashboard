@@ -19,6 +19,7 @@ const TimeAnalysisPage = () => {
     // For standard attribution, usually "Carry" means leads that come in AFTER working hours, to be processed NEXT day.
     // But for raw analysis, we just classify them based on timestamp.
     const processedData = useMemo(() => {
+        if (!Array.isArray(appendTimeData)) return [];
         return appendTimeData.map(row => {
             if (!row.Time) return null;
 
