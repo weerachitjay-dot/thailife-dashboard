@@ -40,62 +40,67 @@ const fetchSheetData = async (type) => {
 
 // Mapper functions to transform CSV rows to Supabase Schema
 const mapRow = (type, row) => {
-    // Row keys depend on parseCSV output (header names)
-    // We need to be careful about matching CSV headers to exact object keys.
+    // Helper to find value case-insensitively or with variations
+    const getVal = (keys) => {
+        for (const k of keys) {
+            if (row[k] !== undefined) return row[k];
+        }
+        return undefined;
+    };
 
     switch (type) {
         case 'append':
             // CSV: Day, Product, Ad Name, Impressions, Cost, Leads, Meta_leads
             // DB: day, product, ad_name, impressions, cost, leads, meta_leads
             return {
-                day: row.Day,
-                product: row.Product,
-                ad_name: row['Ad Name'],
-                impressions: parseInt(row.Impressions || 0),
-                cost: parseFloat(row.Cost || 0),
-                leads: parseInt(row.Leads || 0),
-                meta_leads: parseInt(row.Meta_leads || 0)
+                day: getVal(['Day', 'day']),
+                product: getVal(['Product', 'product', 'Product_Normalized']),
+                ad_name: getVal(['Ad Name', 'Ad_Name', 'ad_name', 'ad name']),
+                impressions: parseInt(getVal(['Impressions', 'impressions']) || 0),
+                cost: parseFloat(getVal(['Cost', 'cost']) || 0),
+                leads: parseInt(getVal(['Leads', 'leads']) || 0),
+                meta_leads: parseInt(getVal(['Meta_leads', 'Meta Leads', 'meta_leads']) || 0)
             };
         case 'sent':
             // CSV: Day, Product, Leads_Sent
             // DB: day, product, leads_sent
             return {
-                day: row.Day,
-                product: row.Product, // Note: This might need normalization if the CSV has 'Product1' etc.
-                leads_sent: parseInt(row.Leads_Sent || 0)
+                day: getVal(['Day', 'day']),
+                product: getVal(['Product', 'product', 'Product_Normalized']), // Note: This might need normalization if the CSV has 'Product1' etc.
+                leads_sent: parseInt(getVal(['Leads_Sent', 'leads_sent', 'Leads Sent']) || 0)
             };
         case 'target':
             // CSV: OWNER, TYPE, Product_Target, Target_Lead_Sent, Target_CPL
             // DB: owner, type, product_target, target_lead_sent, target_cpl
             return {
-                owner: row.OWNER,
-                type: row.TYPE,
-                product_target: row.Product_Target,
-                target_lead_sent: parseInt(row.Target_Lead_Sent || 0),
-                target_cpl: parseFloat(row.Target_CPL || 0)
+                owner: getVal(['OWNER', 'Owner', 'owner']),
+                type: getVal(['TYPE', 'Type', 'type']),
+                product_target: getVal(['Product_Target', 'Product Target', 'product_target']),
+                target_lead_sent: parseInt(getVal(['Target_Lead_Sent', 'Target Lead Sent']) || 0),
+                target_cpl: parseFloat(getVal(['Target_CPL', 'Target CPL']) || 0)
             };
         case 'append_time':
             // CSV: Day, Time_of_Day, Campaign_Name, Campaign_ID, Ad_Set_Name, Ad_Set_ID, Ad_Name, Ad_ID, Leads, Cost
             // DB: day, time_of_day, campaign_name, campaign_id, ad_set_name, ad_set_id, ad_name, ad_id, leads, cost
             return {
-                day: row.Day,
-                time_of_day: row.Time_of_Day,
-                campaign_name: row.Campaign_Name,
-                campaign_id: row.Campaign_ID,
-                ad_set_name: row.Ad_Set_Name,
-                ad_set_id: row.Ad_Set_ID,
-                ad_name: row.Ad_Name,
-                ad_id: row.Ad_ID,
-                leads: parseInt(row.Leads || 0),
-                cost: parseFloat(row.Cost || 0)
+                day: getVal(['Day', 'day']),
+                time_of_day: getVal(['Time', 'time', 'Time_of_Day', 'time_of_day']),
+                campaign_name: getVal(['Campaign_Name', 'campaign_name', 'Campaign Name']),
+                campaign_id: getVal(['Campaign_ID', 'campaign_id']),
+                ad_set_name: getVal(['Ad_Set_Name', 'ad_set_name']),
+                ad_set_id: getVal(['Ad_Set_ID', 'ad_set_id']),
+                ad_name: getVal(['Ad_Name', 'ad_name', 'Ad Name']),
+                ad_id: getVal(['Ad_ID', 'ad_id']),
+                leads: parseInt(getVal(['Leads', 'leads']) || 0),
+                cost: parseFloat(getVal(['Cost', 'cost']) || 0)
             };
         case 'telesales':
             // CSV: Day, Product, Leads_TL (Assumption based on Task boundary/Context)
             // DB: day, product, leads_tl
             return {
-                day: row.Day,
-                product: row.Product,
-                leads_tl: parseInt(row.Leads_TL || 0)
+                day: getVal(['Day', 'day']),
+                product: getVal(['Product', 'product']),
+                leads_tl: parseInt(getVal(['Leads_TL', 'leads_tl']) || 0)
             };
         default:
             return null;
