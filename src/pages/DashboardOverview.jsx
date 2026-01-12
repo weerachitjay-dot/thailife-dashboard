@@ -15,15 +15,24 @@ const DashboardOverview = () => {
 
     // --- MERGED DATA ---
     const mergedData = useMemo(() => {
+        // DEBUG: Trace appendData
+        console.log('DEBUG: Overview - appendData count:', appendData?.length || 0);
+        console.log('DEBUG: Overview - appendData sample:', appendData?.[0]);
+        console.log('DEBUG: Overview - dateRange:', dateRange);
+
         const groupedAds = {};
+        let filteredCount = 0;
         appendData.forEach(row => {
             if (row.Day < dateRange.start || row.Day > dateRange.end) return;
+            filteredCount++;
             const key = `${row.Day}|${row.Product}`;
             if (!groupedAds[key]) groupedAds[key] = { Cost: 0, Leads: 0, Meta_Leads: 0 };
             groupedAds[key].Cost += row.Cost || 0;
             groupedAds[key].Leads += row.Leads || 0;
-            groupedAds[key].Meta_Leads += row.Meta_leads || 0;
+            groupedAds[key].Meta_Leads += row.Meta_Leads || row.Meta_leads || 0;
         });
+        console.log('DEBUG: Overview - appendData after date filter:', filteredCount);
+        console.log('DEBUG: Overview - groupedAds keys:', Object.keys(groupedAds).length);
 
         const groupedSent = {};
         sentData.forEach(row => {
@@ -48,6 +57,7 @@ const DashboardOverview = () => {
 
             result.push({ Day: day, Product: product, ...ads, ...sent, ...targetInfo });
         });
+        console.log('DEBUG: Overview - mergedData count:', result.length);
         return result.sort((a, b) => (a.Day || '').localeCompare(b.Day || ''));
     }, [appendData, sentData, targetData, dateRange, filters]);
 
