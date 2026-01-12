@@ -243,8 +243,18 @@ export const processAppendData = (data, mappings = []) => {
         const creativeMatch = adName.match(/_(.*)/);
 
         // Use new robust extraction
-        const rawProduct = extractProductFromCampaign(campName);
-        const productNormalized = normalizeProduct(rawProduct, mappings);
+        // If Supabase already has 'product', use it. Otherwise derive from Campaign Name.
+        const existingProduct = row.Product || row.product || row.Product_Normalized || '';
+        let rawProduct = '';
+        let productNormalized = '';
+
+        if (existingProduct) {
+            rawProduct = existingProduct;
+            productNormalized = existingProduct; // Assume it's already normalized if in DB
+        } else {
+            rawProduct = extractProductFromCampaign(campName);
+            productNormalized = normalizeProduct(rawProduct, mappings);
+        }
 
         // Partner extraction (heuristic: keep existing simple logic or improve later)
         const partnerMatch = campName.match(/_(.*?)\+/);
