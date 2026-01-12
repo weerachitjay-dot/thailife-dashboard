@@ -22,16 +22,17 @@ export const DataProvider = ({ children }) => {
 
     const [productMappings, setProductMappings] = useState([]);
 
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    // Default to TODAY's date
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const [dateRange, setDateRange] = useState({ start: today, end: today });
     const [filters, setFilters] = useState({
         owner: 'All',
         type: 'All',
         product: 'All'
     });
 
-    // Campaign Config for "Round" logic (Future proofing as per strict requirements)
-    // For now, mirroring App.jsx defaults but we will make this dynamic later
-    const [campaignConfig, setCampaignConfig] = useState({ start: '2025-11-01', end: '2025-11-30' });
+    // Campaign Config - default to today (will be updated after data loads)
+    const [campaignConfig, setCampaignConfig] = useState({ start: today, end: today });
 
     useEffect(() => {
         const loadDefaultData = async () => {
@@ -223,8 +224,9 @@ export const DataProvider = ({ children }) => {
                 console.log('DEBUG: All unique Dates:', allDates.slice(0, 5), '...', allDates.length, 'total');
 
                 if (allDates.length) {
-                    console.log('DEBUG: Setting dateRange:', allDates[0], 'to', allDates[allDates.length - 1]);
-                    setDateRange({ start: allDates[0], end: allDates[allDates.length - 1] });
+                    // Only update campaignConfig (data availability range), NOT dateRange
+                    // User wants dateRange to default to TODAY and persist when changed
+                    console.log('DEBUG: Data range available:', allDates[0], 'to', allDates[allDates.length - 1]);
                     setCampaignConfig(prev => ({ ...prev, start: allDates[0], end: allDates[allDates.length - 1] }));
                 } else {
                     console.warn('DEBUG: No dates found! Check if Day field is being mapped correctly.');
