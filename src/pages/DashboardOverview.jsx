@@ -279,12 +279,12 @@ const DashboardOverview = () => {
                                     <td className="px-6 py-4 font-semibold text-slate-500">{row.TYPE}</td>
                                     <td className="px-6 py-4 text-slate-600">{row.OWNER}</td>
                                     <td className="px-6 py-4 font-bold text-slate-800">{row.Product_Target}</td>
-                                    <td className="px-6 py-4 text-right text-slate-500">{row.Target_Lead_Sent.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-indigo-600">{row.actual.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-violet-600">{Math.round(row.forecastTotal).toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right text-slate-500">{(row.Target_Lead_Sent || 0).toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-bold text-indigo-600">{(row.actual || 0).toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-bold text-violet-600">{Math.round(row.forecastTotal || 0).toLocaleString()}</td>
                                     <td className="px-6 py-4 text-center">
                                         <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${row.forecastPercent >= 100 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                                            {row.forecastPercent.toFixed(0)}%
+                                            {(row.forecastPercent || 0).toFixed(0)}%
                                         </span>
                                     </td>
                                 </tr>
@@ -413,20 +413,20 @@ const DashboardOverview = () => {
                             {sortedPerformanceData.map((row, idx) => (
                                 <tr key={idx} className="hover:bg-white/60 transition-colors">
                                     <td className="px-6 py-4 font-bold text-slate-700">{row.Product}</td>
-                                    <td className="px-6 py-4 text-right text-slate-500">฿{row.Cost.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right font-medium text-indigo-600">{row.Leads.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right font-medium text-orange-600">{row.Leads_Sent.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right text-slate-400">{row.Target.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right text-slate-500">฿{(row.Cost || 0).toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-medium text-indigo-600">{(row.Leads || 0).toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-medium text-orange-600">{(row.Leads_Sent || 0).toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right text-slate-400">{(row.Target || 0).toLocaleString()}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
                                                 <div className={`h-full rounded-full ${row.Percent >= 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${Math.min(row.Percent, 100)}%` }}></div>
                                             </div>
-                                            <span className="text-xs font-bold w-9">{row.Percent.toFixed(0)}%</span>
+                                            <span className="text-xs font-bold w-9">{(row.Percent || 0).toFixed(0)}%</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-right font-medium text-indigo-600">฿{row.CPL_FB.toFixed(0)}</td>
-                                    <td className="px-6 py-4 text-right font-medium text-orange-600">฿{row.CPL_Sent.toFixed(0)}</td>
+                                    <td className="px-6 py-4 text-right font-medium text-indigo-600">฿{(row.CPL_FB || 0).toFixed(0)}</td>
+                                    <td className="px-6 py-4 text-right font-medium text-orange-600">฿{(row.CPL_Sent || 0).toFixed(0)}</td>
                                 </tr>
                             ))}
                         </tbody>
