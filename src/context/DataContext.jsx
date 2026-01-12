@@ -110,6 +110,13 @@ export const DataProvider = ({ children }) => {
                     return null;
                 };
 
+                // Helper to extract data (CSV Text OR Array objects)
+                // Defined BEFORE usage to prevent ReferenceError (TDZ)
+                const extractData = (res, snippet) => {
+                    if (res?.type === 'supabase') return { data: res.data, isSupabase: true };
+                    return { data: parseCSV(res ? res.text : snippet), isSupabase: false };
+                };
+
                 const fetchWithSupabasePriority = async (type, tableKey) => {
                     // 1. Try Supabase
                     const sb = await fetchSupabaseData(tableKey);
@@ -126,12 +133,6 @@ export const DataProvider = ({ children }) => {
                     fetchWithSupabasePriority('append_time', 'TIME_ANALYSIS'),
                     fetchWithSupabasePriority('telesales', 'TELESALES')
                 ]);
-
-                // Helper to extract data (CSV Text OR Array objects)
-                const extractData = (res, snippet) => {
-                    if (res?.type === 'supabase') return { data: res.data, isSupabase: true };
-                    return { data: parseCSV(res ? res.text : snippet), isSupabase: false };
-                };
 
                 const appendObj = extractData(appendRes, SNIPPET_APPEND);
                 const sentObj = extractData(sentRes, SNIPPET_APPENDSENT);
