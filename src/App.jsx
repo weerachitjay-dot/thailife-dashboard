@@ -14,6 +14,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import CostProfitPage from './pages/CostProfitPage';
 import ProductMasterPage from './pages/ProductMasterPage';
 import LeadsAnalysisPage from './pages/LeadsAnalysisPage';
+import AdminPage from './pages/AdminPage'; // NEW
 import './App.css';
 
 // --- Authenticated App Content ---
@@ -83,6 +84,10 @@ const AuthenticatedApp = ({ user, onLogout, users, onAddUser, onDeleteUser }) =>
           onDeleteUser={onDeleteUser}
           currentUser={user}
         />
+      )}
+
+      {activeTab === 'admin' && user?.role === 'admin' && (
+        <AdminPage />
       )}
     </MainLayout>
   );

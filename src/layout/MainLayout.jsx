@@ -17,6 +17,11 @@ const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
         { id: 'leads-analysis', label: 'Leads Analysis', icon: Layers }, // NEW
         { id: 'product-master', label: 'Product Master', icon: Table, className: 'text-xs' }, // Smaller text if needed
     ];
+
+    // Add Admin Tab if user is admin
+    if (user?.role === 'admin') {
+        menuItems.push({ id: 'admin', label: 'Admin Control', icon: Settings, className: 'text-amber-600' });
+    }
     // Extract unique options for filters if needed, but for now we can rely on what we had.
     // In App.jsx, uniqueOwners etc were derived from targetData.
     // We can access targetData from context to populate dropdowns.

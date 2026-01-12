@@ -9,6 +9,17 @@ export const SHEET_CONFIG = {
     }
 };
 
+export const FACEBOOK_APP_ID = '1129426862306354'; // Replace with actual ID if different
+
+export const SUPABASE_TABLES = {
+    APPEND: 'sheet_append',
+    SENT: 'sheet_sent',
+    TARGETS: 'sheet_targets',
+    TIME_ANALYSIS: 'sheet_time_analysis',
+    TELESALES: 'sheet_telesales',
+    AUTH: 'facebook_auth'
+};
+
 // Use Environment Variables for Security (Defined in .env)
 export const DEFAULT_USERS = [
     { id: 2, username: 'weerachit.jay', pass: import.meta.env.VITE_ADMIN_PASS, name: 'Weerachit Jay', role: 'admin' },
