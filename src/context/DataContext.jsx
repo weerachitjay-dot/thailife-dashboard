@@ -2,7 +2,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
 import { SHEET_CONFIG, SUPABASE_TABLES, SNIPPET_APPEND, SNIPPET_APPENDSENT, SNIPPET_TARGET, SNIPPET_APPEND_TIME } from '../utils/constants';
-import { parseCSV, processAppendData, processSentData } from '../utils/formatters';
+import { parseCSV, processAppendData, processSentData, normalizeProduct } from '../utils/formatters';
+
+// ... (in DataContext)
+
+// Process Telesales
+const processedTelesales = parsedTelesales.map(row => ({
+    ...row,
+    Product_Normalized: normalizeProduct(row.Product || row.product, mappings)
+}));
 
 const DataContext = createContext();
 
@@ -153,11 +161,11 @@ export const DataProvider = ({ children }) => {
                 const processedAppend = processAppendData(parsedAppend, mappings);
                 const processedAppendTime = processAppendData(parsedAppendTime, mappings);
 
-                // Process Telesales (Use same normalizer as Sent)
-                // Assuming schema: Day, Product, Leads_TL
+                // Process Telesales (Use direct normalizer)
                 const processedTelesales = parsedTelesales.map(row => ({
                     ...row,
-                    Product_Normalized: processSentData([row], mappings)[0]?.Product_Normalized // Reuse logic if possible, or just call normalizer
+                    // Try robust product lookup
+                    Product_Normalized: normalizeProduct(row.Product || row.product || row.Product_Normalized, mappings)
                 }));
 
                 // Wait, processSentData maps 'Product1' -> Normalized. Let's see what keys we expect from TL.
