@@ -224,10 +224,10 @@ export const extractProductFromCampaign = (campaignName) => {
 export const processAppendData = (data, mappings = []) => {
     return data.map(row => {
         // Handle case-insensitive or variation in headers from real CSV vs Snippets vs Supabase snake_case
-        const adSetName = row.Ad_set_name || row.Ad_Set_Name || row.ad_set_name || '';
-        const adName = row.Ad_name || row.Ad_Name || row.ad_name || '';
-        const campName = row.Campaign_name || row.Campaign_Name || row.campaign_name || '';
-        const rawTime = row.Time || row.Time_of_Day || row.time_of_day || '';
+        const adSetName = row.Ad_set_name || row.Ad_Set_Name || row.ad_set_name || row['Ad Set Name'] || '';
+        const adName = row.Ad_name || row.Ad_Name || row.ad_name || row['Ad Name'] || '';
+        const campName = row.Campaign_name || row.Campaign_Name || row.campaign_name || row['Campaign Name'] || '';
+        const rawTime = row.Time || row.Time_of_Day || row.time_of_day || row['Time'] || row['Time of Day'] || '';
 
         // Normalize IDs if present (Supabase or CSV variations)
         const campaignId = row.Campaign_ID || row.campaign_id || row['Campaign ID'] || '';
