@@ -179,6 +179,11 @@ export const DataProvider = ({ children }) => {
                 const processedAppend = processAppendData(parsedAppend, mappings);
                 const processedAppendTime = processAppendData(parsedAppendTime, mappings);
 
+                // DEBUG: Log append data to see if Cost is present
+                console.log('DEBUG: appendRes:', appendRes);
+                console.log('DEBUG: parsedAppend sample:', parsedAppend?.[0]);
+                console.log('DEBUG: processedAppend sample:', processedAppend?.[0]);
+
                 // Process Telesales (Use direct normalizer)
                 // const processedTelesales = parsedTelesales.map(row => ({
                 //     ...row,
