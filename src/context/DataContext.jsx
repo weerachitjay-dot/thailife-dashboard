@@ -182,9 +182,17 @@ export const DataProvider = ({ children }) => {
                 const processedAppendTime = processAppendData(parsedAppendTime, mappings);
 
                 // DEBUG: Log append data to see if Cost is present
-                console.log('DEBUG: appendRes:', appendRes);
-                console.log('DEBUG: parsedAppend sample:', parsedAppend?.[0]);
-                console.log('DEBUG: processedAppend sample:', processedAppend?.[0]);
+                console.log('DEBUG: =====  APPEND DATA TRACE =====');
+                console.log('DEBUG: appendRes type:', appendRes?.type);
+                console.log('DEBUG: appendRes.data length:', appendRes?.data?.length || 0);
+                console.log('DEBUG: appendRes.data[0] RAW:', appendRes?.data?.[0]);
+                console.log('DEBUG: parsedAppend length:', parsedAppend?.length || 0);
+                console.log('DEBUG: parsedAppend[0]:', parsedAppend?.[0]);
+                console.log('DEBUG: processedAppend length:', processedAppend?.length || 0);
+                console.log('DEBUG: processedAppend[0]:', processedAppend?.[0]);
+                console.log('DEBUG: processedAppend[0].Day:', processedAppend?.[0]?.Day);
+                console.log('DEBUG: processedAppend[0].Cost:', processedAppend?.[0]?.Cost);
+                console.log('DEBUG: ===============================');
 
                 // Process Telesales (Use direct normalizer)
                 // const processedTelesales = parsedTelesales.map(row => ({
