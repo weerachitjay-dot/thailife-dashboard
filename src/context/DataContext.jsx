@@ -222,19 +222,21 @@ export const DataProvider = ({ children }) => {
                 //     // Try robust product lookup
                 //     Product_Normalized: normalizeProduct(row.Product || row.product || row.Product_Normalized, mappings)
                 // }));
-                // Process Telesales (Use direct normalizer)
+                // Process Telesales (Normalize snake_case to CamelCase)
                 const processedTelesales = Array.isArray(parsedTelesales) ? parsedTelesales.map(row => ({
                     ...row,
-                    // Try robust product lookup
-                    Product_Normalized: normalizeProduct(row.Product || row.product || row.Product_Normalized, mappings)
+                    Day: row.Day || row.day,
+                    Product: row.Product || row.product,
+                    Product_Normalized: normalizeProduct(row.Product || row.product || row.Product_Normalized, mappings),
+                    Leads_TL: parseInt(row.Leads_TL ?? row.leads_tl ?? 0)
                 })) : [];
 
-                // Wait, processSentData maps 'Product1' -> Normalized. Let's see what keys we expect from TL.
-                // If the user didn't specify schema, we can assume standard or robustly normalize 'Product' column.
+                console.log('DEBUG: telesalesData count:', processedTelesales?.length || 0);
+                console.log('DEBUG: telesalesData sample:', processedTelesales?.[0]);
 
                 setAppendData(processedAppend);
                 setAppendTimeData(processedAppendTime);
-                setTelesalesData(parsedTelesales);
+                setTelesalesData(processedTelesales); // Fixed: Use processedTelesales instead of parsedTelesales
 
                 // DEBUG: Comprehensive logging
                 console.log('DEBUG: ===== DATA LOADING COMPLETE =====');
