@@ -55,11 +55,15 @@ create table if not exists sheet_time_analysis (
   day date not null,
   time_of_day text,
   campaign_name text,
+  campaign_id text,
   ad_set_name text,
+  ad_set_id text,
   ad_name text,
+  ad_id text,
   leads int default 0,
+  cost numeric(10, 2) default 0,
   created_at timestamptz default now(),
-  unique(day, time_of_day, ad_name) -- Composite key guess
+  unique(day, time_of_day, ad_id) -- Unique by Ad ID per time slot is safer
 );
 
 -- 6. Sheet: Telesales

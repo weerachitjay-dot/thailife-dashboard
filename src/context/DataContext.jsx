@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { SHEET_CONFIG, SNIPPET_APPEND, SNIPPET_APPENDSENT, SNIPPET_TARGET, SNIPPET_APPEND_TIME } from '../utils/constants';
+import { supabase } from '../lib/supabase';
+import { SHEET_CONFIG, SUPABASE_TABLES, SNIPPET_APPEND, SNIPPET_APPENDSENT, SNIPPET_TARGET, SNIPPET_APPEND_TIME } from '../utils/constants';
 import { parseCSV, processAppendData, processSentData } from '../utils/formatters';
 
 const DataContext = createContext();
@@ -71,19 +72,51 @@ export const DataProvider = ({ children }) => {
 
                     return null;
                 };
+                const fetchSupabaseData = async (tableKey) => {
+                    const tableName = SUPABASE_TABLES[tableKey];
+                    if (!tableName) return null;
+                    if (!supabase) return null;
+                    try {
+                        const { data, error } = await supabase.from(tableName).select('*');
+                        if (error) {
+                            console.warn('Supabase fetch failed:', error.message);
+                            return null;
+                        }
+                        if (data && data.length > 0) return { data, type: 'supabase' };
+                    } catch (e) {
+                        console.warn('Supabase connection failed');
+                    }
+                    return null;
+                };
+
+                // Specialized Fetch for Time Analysis (Prioritize Supabase)
+                const fetchAppendTime = async () => {
+                    const sb = await fetchSupabaseData('TIME_ANALYSIS');
+                    if (sb) return sb;
+                    return await fetchData('append_time');
+                };
 
                 const [appendRes, sentRes, targetRes, appendTimeRes, telesalesRes] = await Promise.all([
                     fetchData('append'),
                     fetchData('sent'),
                     fetchData('target'),
-                    fetchData('append_time'),
+                    fetchAppendTime(),
                     fetchData('telesales')
                 ]);
 
                 const appendText = appendRes ? appendRes.text : SNIPPET_APPEND;
                 const sentText = sentRes ? sentRes.text : SNIPPET_APPENDSENT;
                 const targetText = targetRes ? targetRes.text : SNIPPET_TARGET;
-                const appendTimeText = appendTimeRes ? appendTimeRes.text : SNIPPET_APPEND_TIME;
+                // Handle mixed types for appendTime
+                let parsedAppendTime = [];
+                if (appendTimeRes && appendTimeRes.type === 'supabase') {
+                    parsedAppendTime = appendTimeRes.data;
+                    setDataSource('Supabase + Sheets');
+                } else {
+                    const appendTimeText = appendTimeRes ? appendTimeRes.text : SNIPPET_APPEND_TIME;
+                    parsedAppendTime = parseCSV(appendTimeText);
+                }
+
                 const telesalesText = telesalesRes ? telesalesRes.text : '';
 
                 if (!appendRes && !sentRes && !targetRes && !appendTimeRes && !telesalesRes) {
@@ -93,7 +126,7 @@ export const DataProvider = ({ children }) => {
                 const parsedAppend = parseCSV(appendText);
                 const parsedSent = parseCSV(sentText);
                 const parsedTarget = parseCSV(targetText);
-                const parsedAppendTime = parseCSV(appendTimeText);
+                // parsedAppendTime is already handled above
                 const parsedTelesales = telesalesText ? parseCSV(telesalesText) : [];
 
                 setRawData({ append: parsedAppend, sent: parsedSent, target: parsedTarget, appendTime: parsedAppendTime, telesales: parsedTelesales });

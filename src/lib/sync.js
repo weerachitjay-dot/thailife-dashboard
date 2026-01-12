@@ -75,15 +75,19 @@ const mapRow = (type, row) => {
                 target_cpl: parseFloat(row.Target_CPL || 0)
             };
         case 'append_time':
-            // CSV: Day, Time_of_Day, Campaign_Name, Ad_Set_Name, Ad_Name, Leads
-            // DB: day, time_of_day, campaign_name, ad_set_name, ad_name, leads
+            // CSV: Day, Time_of_Day, Campaign_Name, Campaign_ID, Ad_Set_Name, Ad_Set_ID, Ad_Name, Ad_ID, Leads, Cost
+            // DB: day, time_of_day, campaign_name, campaign_id, ad_set_name, ad_set_id, ad_name, ad_id, leads, cost
             return {
                 day: row.Day,
                 time_of_day: row.Time_of_Day,
                 campaign_name: row.Campaign_Name,
+                campaign_id: row.Campaign_ID,
                 ad_set_name: row.Ad_Set_Name,
+                ad_set_id: row.Ad_Set_ID,
                 ad_name: row.Ad_Name,
-                leads: parseInt(row.Leads || 0)
+                ad_id: row.Ad_ID,
+                leads: parseInt(row.Leads || 0),
+                cost: parseFloat(row.Cost || 0)
             };
         case 'telesales':
             // CSV: Day, Product, Leads_TL (Assumption based on Task boundary/Context)

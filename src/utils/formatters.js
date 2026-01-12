@@ -202,11 +202,16 @@ export const extractProductFromCampaign = (campaignName) => {
 
 export const processAppendData = (data) => {
     return data.map(row => {
-        // Handle case-insensitive or variation in headers from real CSV vs Snippets
-        const adSetName = row.Ad_set_name || row.Ad_Set_Name || '';
-        const adName = row.Ad_name || row.Ad_Name || '';
-        const campName = row.Campaign_name || row.Campaign_Name || '';
-        const rawTime = row.Time || row.Time_of_Day || '';
+        // Handle case-insensitive or variation in headers from real CSV vs Snippets vs Supabase snake_case
+        const adSetName = row.Ad_set_name || row.Ad_Set_Name || row.ad_set_name || '';
+        const adName = row.Ad_name || row.Ad_Name || row.ad_name || '';
+        const campName = row.Campaign_name || row.Campaign_Name || row.campaign_name || '';
+        const rawTime = row.Time || row.Time_of_Day || row.time_of_day || '';
+
+        // Normalize IDs if present (Supabase)
+        const campaignId = row.Campaign_ID || row.campaign_id || '';
+        const adSetId = row.Ad_Set_ID || row.ad_set_id || '';
+        const adId = row.Ad_ID || row.ad_id || '';
 
         const { category, interest } = parseAdSetInterest(adSetName);
         const creativeMatch = adName.match(/_(.*)/);
@@ -232,8 +237,15 @@ export const processAppendData = (data) => {
             Partner: partnerMatch ? partnerMatch[1].trim() : 'Unknown',
             Product: productNormalized, // Using normalized product now
             Product_Raw: rawProduct,    // Keep raw for debugging if needed
-            Day: row.Day,
-            Time: cleanTime
+            Day: row.Day || row.day,
+            Time: cleanTime,
+            // Ensure numeric fields are available in PascalCase for Frontend
+            Leads: parseInt(row.Leads ?? row.leads ?? 0),
+            Cost: parseFloat(row.Cost ?? row.cost ?? 0),
+            // IDs
+            Campaign_ID: campaignId,
+            Ad_Set_ID: adSetId,
+            Ad_ID: adId
         };
     });
 };
