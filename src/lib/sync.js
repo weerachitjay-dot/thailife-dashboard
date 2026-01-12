@@ -149,14 +149,31 @@ export const syncSheetToSupabase = async (type) => {
 
     // Batch Upsert
     // Supabase limits batch size? Usually 1000s is fine.
-    // We need to know which table.
+    // We need to know which table and conflict columns.
     let tableName = null;
+    let conflictColumns = null;
+
     switch (type) {
-        case 'append': tableName = SUPABASE_TABLES.APPEND; break;
-        case 'sent': tableName = SUPABASE_TABLES.SENT; break;
-        case 'target': tableName = SUPABASE_TABLES.TARGETS; break;
-        case 'append_time': tableName = SUPABASE_TABLES.TIME_ANALYSIS; break;
-        case 'telesales': tableName = SUPABASE_TABLES.TELESALES; break;
+        case 'append':
+            tableName = SUPABASE_TABLES.APPEND;
+            conflictColumns = 'day, product, ad_name';
+            break;
+        case 'sent':
+            tableName = SUPABASE_TABLES.SENT;
+            conflictColumns = 'day, product';
+            break;
+        case 'target':
+            tableName = SUPABASE_TABLES.TARGETS;
+            conflictColumns = 'product_target';
+            break;
+        case 'append_time':
+            tableName = SUPABASE_TABLES.TIME_ANALYSIS;
+            conflictColumns = 'day, time_of_day, ad_id';
+            break;
+        case 'telesales':
+            tableName = SUPABASE_TABLES.TELESALES;
+            conflictColumns = 'day, product';
+            break;
     }
 
     if (!tableName) throw new Error(`Unknown table for type ${type}`);
@@ -172,7 +189,8 @@ export const syncSheetToSupabase = async (type) => {
         const { error } = await supabase
             .from(tableName)
             .upsert(chunk, {
-                ignoreDuplicates: false
+                ignoreDuplicates: false,
+                onConflict: conflictColumns
             });
 
         if (error) {
