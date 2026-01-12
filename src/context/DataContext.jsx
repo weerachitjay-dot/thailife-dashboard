@@ -288,6 +288,7 @@ export const DataProvider = ({ children }) => {
             sentData,
             targetData,
             telesalesData,
+            appendTimeData, // ADDED: Was missing, causing Time Analysis to not receive data
             productMappings, // Expose mappings
             campaignConfig,
             setCampaignConfig, // Allow updating config
