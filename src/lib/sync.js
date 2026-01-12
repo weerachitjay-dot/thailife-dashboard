@@ -179,8 +179,9 @@ export const syncSheetToSupabase = async (type) => {
     if (!tableName) throw new Error(`Unknown table for type ${type}`);
 
     // Deduplicate rows based on conflict columns to prevent intra-batch conflicts
-    // This is crucial because Postgres raises error if multiple rows in the same INSERT target the same conflict target.
+    // AND Aggregate metrics for rows that share the same key (prevent data loss from granular source)
     const uniqueRowsMap = new Map();
+
     rowsToInsert.forEach(row => {
         let key = '';
         if (type === 'append') key = `${row.day}|${row.product}|${row.ad_name}`;
@@ -189,15 +190,45 @@ export const syncSheetToSupabase = async (type) => {
         else if (type === 'append_time') key = `${row.day}|${row.time_of_day}|${row.ad_id}`;
         else if (type === 'telesales') key = `${row.day}|${row.product}`;
 
-        // Validation: If key components are missing, should we skip?
-        // Suppress rows with critical missing keys to avoid DB errors (e.g. NULL product in append)
-        // But for append_time, ad_id might be null? If unique index handles nulls as distinct, logging key with "undefined" works.
-        // However, if we want to overwrite, we assume last one wins.
-        uniqueRowsMap.set(key, row);
+        // Skip if critical key is missing
+        if (type === 'append' && !row.product) return; // Example safety
+
+        if (uniqueRowsMap.has(key)) {
+            // Aggregate
+            const existing = uniqueRowsMap.get(key);
+
+            if (type === 'append') {
+                existing.impressions += row.impressions || 0;
+                existing.cost += row.cost || 0;
+                existing.leads += row.leads || 0;
+                existing.meta_leads += row.meta_leads || 0;
+            } else if (type === 'sent') {
+                existing.leads_sent += row.leads_sent || 0;
+            } else if (type === 'append_time') {
+                existing.leads += row.leads || 0;
+                existing.cost += row.cost || 0;
+            } else if (type === 'telesales') {
+                existing.leads_tl += row.leads_tl || 0;
+            }
+            // For targets, we overwrite (assume latest config is truth)
+            if (type === 'target') {
+                uniqueRowsMap.set(key, row);
+            }
+        } else {
+            uniqueRowsMap.set(key, row);
+        }
     });
 
+    // Formatting for decimals (cost) to avoid floating point weirdness?
+    // JavaScript numbers are floats. Maybe round to 2 decimals for cost?
+    if (type === 'append' || type === 'append_time') {
+        uniqueRowsMap.forEach(row => {
+            if (row.cost) row.cost = parseFloat(row.cost.toFixed(2));
+        });
+    }
+
     // Log deduplication stats
-    console.log(`Deduplication: ${rowsToInsert.length} -> ${uniqueRowsMap.size} rows`);
+    console.log(`Aggregation: ${rowsToInsert.length} -> ${uniqueRowsMap.size} rows`);
     const uniqueRows = Array.from(uniqueRowsMap.values());
 
     // Batch Processing to avoid Timeouts (Limit ~1000 rows per batch)
