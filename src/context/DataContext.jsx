@@ -98,16 +98,38 @@ export const DataProvider = ({ children }) => {
                     const tableName = SUPABASE_TABLES[tableKey];
                     if (!tableName) return null;
                     if (!supabase) return null;
+
                     try {
-                        // Use .range(0, 50000) to fetch all rows (Supabase default limit is 1000)
-                        const { data, error } = await supabase.from(tableName).select('*').range(0, 50000);
-                        if (error) {
-                            console.warn('Supabase fetch failed:', error.message);
-                            return null;
+                        // Fetch ALL rows using pagination (Supabase limits to 1000 per request)
+                        let allData = [];
+                        let from = 0;
+                        const batchSize = 1000;
+                        let hasMore = true;
+
+                        while (hasMore) {
+                            const { data, error } = await supabase
+                                .from(tableName)
+                                .select('*')
+                                .range(from, from + batchSize - 1);
+
+                            if (error) {
+                                console.warn('Supabase fetch failed:', error.message);
+                                break;
+                            }
+
+                            if (data && data.length > 0) {
+                                allData = [...allData, ...data];
+                                from += batchSize;
+                                hasMore = data.length === batchSize;
+                            } else {
+                                hasMore = false;
+                            }
                         }
-                        if (data && data.length > 0) return { data, type: 'supabase' };
+
+                        console.log(`DEBUG: Fetched ${allData.length} total rows from ${tableName}`);
+                        if (allData.length > 0) return { data: allData, type: 'supabase' };
                     } catch (e) {
-                        console.warn('Supabase connection failed');
+                        console.warn('Supabase connection failed:', e);
                     }
                     return null;
                 };
@@ -232,10 +254,11 @@ export const DataProvider = ({ children }) => {
                 console.log('DEBUG: All unique Dates:', allDates.slice(0, 5), '...', allDates.length, 'total');
 
                 if (allDates.length) {
-                    // Only update campaignConfig (data availability range), NOT dateRange
-                    // User wants dateRange to default to TODAY and persist when changed
-                    console.log('DEBUG: Data range available:', allDates[0], 'to', allDates[allDates.length - 1]);
-                    setCampaignConfig(prev => ({ ...prev, start: allDates[0], end: allDates[allDates.length - 1] }));
+                    // Auto-set dateRange to LAST DATE in data (so user sees data immediately)
+                    const latestDate = allDates[allDates.length - 1];
+                    console.log('DEBUG: Setting dateRange to latest date:', latestDate);
+                    setDateRange({ start: latestDate, end: latestDate });
+                    setCampaignConfig(prev => ({ ...prev, start: allDates[0], end: latestDate }));
                 } else {
                     console.warn('DEBUG: No dates found! Check if Day field is being mapped correctly.');
                 }
