@@ -48,7 +48,7 @@ const DashboardOverview = () => {
 
             result.push({ Day: day, Product: product, ...ads, ...sent, ...targetInfo });
         });
-        return result.sort((a, b) => a.Day.localeCompare(b.Day));
+        return result.sort((a, b) => (a.Day || '').localeCompare(b.Day || ''));
     }, [appendData, sentData, targetData, dateRange, filters]);
 
     // --- FORECAST DATA ---
@@ -116,7 +116,7 @@ const DashboardOverview = () => {
             const orderA = TYPE_ORDER[a.TYPE] || 99;
             const orderB = TYPE_ORDER[b.TYPE] || 99;
             if (orderA !== orderB) return orderA - orderB;
-            return a.OWNER.localeCompare(b.OWNER) || a.Product_Target.localeCompare(b.Product_Target);
+            return (a.OWNER || '').localeCompare(b.OWNER || '') || (a.Product_Target || '').localeCompare(b.Product_Target || '');
         });
 
         const totalForecastPercent = totalTarget > 0 ? (totalForecast / totalTarget) * 100 : 0;
@@ -159,7 +159,7 @@ const DashboardOverview = () => {
             grouped[d.Day].Meta_Leads += d.Meta_Leads;
             grouped[d.Day].Leads += d.Leads;
         });
-        return Object.values(grouped).sort((a, b) => a.Day.localeCompare(b.Day)).map(d => {
+        return Object.values(grouped).sort((a, b) => (a.Day || '').localeCompare(b.Day || '')).map(d => {
             const date = new Date(d.Day);
             return {
                 ...d,
