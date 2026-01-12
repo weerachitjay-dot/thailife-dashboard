@@ -137,6 +137,11 @@ export const syncSheetToSupabase = async (type) => {
     // Map to DB Schema
     const rowsToInsert = enrichedData.map(row => mapRow(type, row)).filter(r => r);
 
+    if (rowsToInsert.length > 0) {
+        console.log('DEBUG: First Row Enriched:', enrichedData[0]);
+        console.log('DEBUG: First Row mapped:', rowsToInsert[0]);
+    }
+
     // Batch Upsert
     // Supabase limits batch size? Usually 1000s is fine.
     // We need to know which table.
