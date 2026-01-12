@@ -276,9 +276,19 @@ export const processAppendData = (data, mappings = []) => {
             Product_Raw: rawProduct,    // Keep raw for debugging if needed
             Day: row.Day || row.day,
             Time: cleanTime,
+            // Campaign & Ad Set info (for Creative Analysis & Smart Audience)
+            Campaign_Name: campName,
+            Ad_Set_Name: adSetName,
+            Ad_Name: adName,
             // Ensure numeric fields are available in PascalCase for Frontend
             Leads: parseInt(row.Leads ?? row.leads ?? 0),
             Cost: parseFloat(row.Cost ?? row.cost ?? 0),
+            Impressions: parseInt(row.Impressions ?? row.impressions ?? 0),
+            Reach: parseInt(row.Reach ?? row.reach ?? 0),
+            Clicks: parseInt(row.Clicks ?? row.clicks ?? 0),
+            Website_Leads: parseInt(row.Website_Leads ?? row.website_leads ?? 0),
+            Meta_Leads: parseInt(row.Meta_Leads ?? row.meta_leads ?? 0),
+            Messaging_Conversations: parseInt(row.Messaging_Conversations_Started ?? row.messaging_conversations_started ?? 0),
             // IDs
             Campaign_ID: campaignId,
             Ad_Set_ID: adSetId,
