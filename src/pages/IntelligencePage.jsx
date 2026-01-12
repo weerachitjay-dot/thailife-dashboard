@@ -60,7 +60,7 @@ const IntelligencePage = () => {
 
             result.push({ Day: day, Product: product, ...ads, ...sent, ...targetInfo });
         });
-        return result.sort((a, b) => a.Day.localeCompare(b.Day));
+        return result.sort((a, b) => (a.Day || '').localeCompare(b.Day || ''));
     }, [appendData, sentData, targetData, dateRange, filters]);
 
 

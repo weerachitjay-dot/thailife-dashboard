@@ -102,7 +102,7 @@ const LeadsAnalysisPage = () => {
 
         // 3. Sort Columns & Rows
         const sortedProducts = Array.from(productsSet).sort();
-        const sortedRows = Array.from(rowMap.values()).sort((a, b) => a.key.localeCompare(b.key));
+        const sortedRows = Array.from(rowMap.values()).sort((a, b) => (a.key || '').localeCompare(b.key || ''));
 
         // 4. Calculate Column Totals (Grand Totals)
         const totalRow = {
