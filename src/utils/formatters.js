@@ -100,7 +100,12 @@ export const getAudienceRecommendation = (stats, targetCpl) => {
 
 export const parseCSV = (csvText) => {
     const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
-    const headers = lines[0].split(',').map(h => h.trim());
+    const headers = lines[0].split(',').map(h => {
+        let header = h.trim();
+        if (header.startsWith('"') && header.endsWith('"')) header = header.slice(1, -1).replace(/""/g, '"');
+        return header;
+    });
+    console.log('DEBUG: Parsed CSV Headers:', headers);
     return lines.slice(1).map(line => {
         const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
         const row = {};
