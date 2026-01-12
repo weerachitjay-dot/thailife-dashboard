@@ -9,7 +9,7 @@ export const SHEET_CONFIG = {
     }
 };
 
-export const FACEBOOK_APP_ID = '1129426862306354'; // Replace with actual ID if different
+export const FACEBOOK_APP_ID = '605018742544860'; // Replace with actual ID if different
 
 export const SUPABASE_TABLES = {
     APPEND: 'sheet_append',
