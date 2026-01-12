@@ -98,7 +98,8 @@ export const DataProvider = ({ children }) => {
                     if (!tableName) return null;
                     if (!supabase) return null;
                     try {
-                        const { data, error } = await supabase.from(tableName).select('*');
+                        // Use .range(0, 50000) to fetch all rows (Supabase default limit is 1000)
+                        const { data, error } = await supabase.from(tableName).select('*').range(0, 50000);
                         if (error) {
                             console.warn('Supabase fetch failed:', error.message);
                             return null;
