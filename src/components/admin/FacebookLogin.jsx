@@ -51,20 +51,16 @@ const FacebookLogin = () => {
             const authResponse = await loginWithFacebook();
             console.log("FB Login Success:", authResponse);
 
-            // Save to Supabase
+            // Save to Supabase (use insert, not upsert - no unique constraint on user_id)
             const { error } = await supabase
                 .from(SUPABASE_TABLES.AUTH)
-                .upsert({
+                .insert({
                     access_token: authResponse.accessToken,
-                    token_type: 'long-lived', // Assuming we might swap later, currently standard
+                    token_type: 'long-lived',
                     user_id: authResponse.userID,
                     expires_at: new Date(Date.now() + authResponse.expiresIn * 1000).toISOString(),
                     data_scope: authResponse.grantedScopes
-                }, { onConflict: 'user_id' }); // Maybe unique on user_id? Or just insert new? 
-            // Schema has PK id, but we want 1 active token per user usually.
-            // Let's just insert for now or upsert if we change schema to Unique UserID.
-            // Re-reading schema: PK is UUID. No unique constraint on user_id. 
-            // So this will insert new rows. That's fine for history.
+                });
 
             if (error) throw error;
 
@@ -100,8 +96,8 @@ const FacebookLogin = () => {
                     onClick={handleLogin}
                     disabled={status === 'connected' || loading}
                     className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${status === 'connected'
-                            ? 'bg-green-100 text-green-700 cursor-default'
-                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                        ? 'bg-green-100 text-green-700 cursor-default'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
                         }`}
                 >
                     {loading ? 'Connecting...' : status === 'connected' ? 'Connected' : 'Connect Facebook'}
