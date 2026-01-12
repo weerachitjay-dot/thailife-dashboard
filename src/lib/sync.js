@@ -50,27 +50,43 @@ const mapRow = (type, row) => {
 
     switch (type) {
         case 'append':
-            // CSV: Day, Product, Ad Name, Impressions, Cost, Leads, Meta_leads
-            // DB: day, product, ad_name, impressions, cost, leads, meta_leads, row_hash
+            // CSV Columns (Google Sheet): campaign_name, Day, Ad_Set_Name, Ad_Name, Reach, Impressions, Clicks, Website_Leads, Cost, Meta_Leads, Leads, Messaging_Conversations_Started
+            // DB: campaign_name, day, ad_set_name, ad_name, reach, impressions, clicks, website_leads, cost, meta_leads, leads, messaging_conversations_started, product, row_hash
+
+            // Handle both snake_case and camelCase variants
+            const campaignName = getVal(['campaign_name', 'Campaign_Name', 'CampaignName', 'Campaign Name']);
             const day = getVal(['Day', 'day']);
-            const product = getVal(['Product', 'product', 'Product_Normalized']);
-            const adName = getVal(['Ad Name', 'Ad_Name', 'ad_name', 'ad name']);
+            const adSetName = getVal(['Ad_Set_Name', 'Ad Set Name', 'AdSetName', 'ad_set_name']);
+            const adName = getVal(['Ad_Name', 'Ad Name', 'AdName', 'ad_name']);
+            const reach = parseInt(getVal(['Reach', 'reach']) || 0);
             const impressions = parseInt(getVal(['Impressions', 'impressions']) || 0);
+            const clicks = parseInt(getVal(['Clicks', 'clicks']) || 0);
+            const websiteLeads = parseInt(getVal(['Website_Leads', 'Website Leads', 'WebsiteLeads', 'website_leads']) || 0);
             const cost = parseFloat(getVal(['Cost', 'cost']) || 0);
+            const metaLeads = parseInt(getVal(['Meta_Leads', 'Meta Leads', 'MetaLeads', 'meta_leads']) || 0);
             const leads = parseInt(getVal(['Leads', 'leads']) || 0);
-            const metaLeads = parseInt(getVal(['Meta_leads', 'Meta Leads', 'meta_leads']) || 0);
+            const messagingConversations = parseInt(getVal(['Messaging_Conversations_Started', 'MessagingConversationsStarted', 'messaging_conversations_started']) || 0);
+
+            // Derive Product from Campaign Name if not explicit
+            const product = getVal(['Product', 'product', 'Product_Normalized']) || '';
 
             // Generate unique row_hash from ALL columns to prevent aggregation
-            const rowHash = `${day}|${product}|${adName}|${impressions}|${cost}|${leads}|${metaLeads}`;
+            const rowHash = `${day}|${campaignName}|${adSetName}|${adName}|${reach}|${impressions}|${clicks}|${websiteLeads}|${cost}|${metaLeads}|${leads}|${messagingConversations}`;
 
             return {
+                campaign_name: campaignName,
                 day,
-                product,
+                ad_set_name: adSetName,
                 ad_name: adName,
+                reach,
                 impressions,
+                clicks,
+                website_leads: websiteLeads,
                 cost,
-                leads,
                 meta_leads: metaLeads,
+                leads,
+                messaging_conversations_started: messagingConversations,
+                product,
                 row_hash: rowHash
             };
         case 'sent':
