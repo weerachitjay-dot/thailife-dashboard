@@ -91,8 +91,8 @@ const mapRow = (type, row) => {
                 ad_set_name: getVal(['Ad_Set_Name', 'ad_set_name']),
                 ad_set_id: getVal(['Ad_Set_ID', 'ad_set_id', 'Ad Set ID']),
                 ad_name: getVal(['Ad_Name', 'ad_name', 'Ad Name']),
-                // Fallback: If Ad ID is missing, use Ad Name to ensure uniqueness and allow upsert to work (idempotency)
-                ad_id: getVal(['Ad_ID', 'ad_id', 'Ad ID']) || getVal(['Ad_Name', 'ad_name', 'Ad Name']),
+                // Fallback: If Ad ID is missing, use COMPOSITE Key (Campaign|AdSet|AdName) to ensure uniqueness across campaigns
+                ad_id: getVal(['Ad_ID', 'ad_id', 'Ad ID']) || `${getVal(['Campaign_Name', 'campaign_name']) || ''}|${getVal(['Ad_Set_Name', 'ad_set_name']) || ''}|${getVal(['Ad_Name', 'ad_name']) || ''}`,
                 leads: parseInt(getVal(['Leads', 'leads']) || 0),
                 cost: parseFloat(getVal(['Cost', 'cost']) || 0)
             };
