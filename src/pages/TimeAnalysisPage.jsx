@@ -221,7 +221,7 @@ const TimeAnalysisPage = () => {
                     </div>
                     <div>
                         <p className="text-slate-600 text-sm font-bold uppercase tracking-wide">Daily CPL</p>
-                        <h3 className="text-3xl font-extrabold text-slate-900">฿{totals.dailyCpl.toFixed(0)}</h3>
+                        <h3 className="text-3xl font-extrabold text-slate-900">฿{(totals.dailyCpl || 0).toFixed(0)}</h3>
                     </div>
                 </div>
                 <div className="glass-card p-6 rounded-2xl flex items-center gap-4 border-l-4 border-l-violet-400 shadow-sm hover:shadow-md transition-all">
@@ -230,7 +230,7 @@ const TimeAnalysisPage = () => {
                     </div>
                     <div>
                         <p className="text-slate-600 text-sm font-bold uppercase tracking-wide">Carry CPL</p>
-                        <h3 className="text-3xl font-extrabold text-slate-900">฿{totals.carryCpl.toFixed(0)}</h3>
+                        <h3 className="text-3xl font-extrabold text-slate-900">฿{(totals.carryCpl || 0).toFixed(0)}</h3>
                     </div>
                 </div>
                 <div className="glass-card p-6 rounded-2xl flex items-center gap-4 border-l-4 border-l-emerald-600 shadow-sm hover:shadow-md transition-all">
@@ -239,7 +239,7 @@ const TimeAnalysisPage = () => {
                     </div>
                     <div>
                         <p className="text-slate-600 text-sm font-bold uppercase tracking-wide">Total CPL</p>
-                        <h3 className="text-3xl font-extrabold text-slate-900">฿{totals.cpl.toFixed(0)}</h3>
+                        <h3 className="text-3xl font-extrabold text-slate-900">฿{(totals.cpl || 0).toFixed(0)}</h3>
                     </div>
                 </div>
             </div>
@@ -506,8 +506,8 @@ const TimeAnalysisPage = () => {
                                     <td className="px-6 py-4 text-right font-bold text-indigo-700">{row.Daily_Leads}</td>
                                     <td className="px-6 py-4 text-right font-bold text-violet-700">{row.Carry_Leads}</td>
                                     <td className="px-6 py-4 text-right font-black text-slate-900">{row.Total_Leads}</td>
-                                    <td className="px-6 py-4 text-right text-slate-600 font-medium">฿{row.Total_Cost.toLocaleString()}</td>
-                                    <td className="px-6 py-4 text-right font-black text-slate-900">฿{row.CPL.toFixed(0)}</td>
+                                    <td className="px-6 py-4 text-right text-slate-600 font-medium">฿{(row.Total_Cost || 0).toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-black text-slate-900">฿{(row.CPL || 0).toFixed(0)}</td>
                                 </tr>
                             ))}
                         </tbody>

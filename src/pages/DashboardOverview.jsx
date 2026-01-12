@@ -220,10 +220,10 @@ const DashboardOverview = () => {
         <>
             {/* KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <KPICard title="Total Leads Sent" value={metrics.totalLeadsSent.toLocaleString()} subtext={`Target: ${metrics.totalTargetSent.toLocaleString()}`} icon={Target} gradient="from-blue-500 to-cyan-500" />
-                <KPICard title="Progress to Target" value={`${metrics.progress.toFixed(1)}%`} subtext="Completion Rate" icon={TrendingUp} gradient={metrics.progress >= 100 ? "from-emerald-500 to-teal-500" : "from-orange-500 to-amber-500"} trend={metrics.progress - 100} />
-                <KPICard title="CPL (Sent)" value={`฿${metrics.cplSent.toFixed(0)}`} subtext={`Meta CPL: ฿${metrics.cplMeta.toFixed(0)}`} icon={DollarSign} gradient="from-violet-500 to-purple-500" />
-                <KPICard title="Total Spending" value={`฿${metrics.totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} subtext="Media Cost" icon={Calculator} gradient="from-slate-700 to-slate-900" />
+                <KPICard title="Total Leads Sent" value={(metrics.totalLeadsSent || 0).toLocaleString()} subtext={`Target: ${(metrics.totalTargetSent || 0).toLocaleString()}`} icon={Target} gradient="from-blue-500 to-cyan-500" />
+                <KPICard title="Progress to Target" value={`${(metrics.progress || 0).toFixed(1)}%`} subtext="Completion Rate" icon={TrendingUp} gradient={(metrics.progress || 0) >= 100 ? "from-emerald-500 to-teal-500" : "from-orange-500 to-amber-500"} trend={(metrics.progress || 0) - 100} />
+                <KPICard title="CPL (Sent)" value={`฿${(metrics.cplSent || 0).toFixed(0)}`} subtext={`Meta CPL: ฿${(metrics.cplMeta || 0).toFixed(0)}`} icon={DollarSign} gradient="from-violet-500 to-purple-500" />
+                <KPICard title="Total Spending" value={`฿${(metrics.totalCost || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`} subtext="Media Cost" icon={Calculator} gradient="from-slate-700 to-slate-900" />
             </div>
 
             {/* Forecasting */}
