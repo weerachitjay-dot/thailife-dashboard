@@ -156,11 +156,12 @@ export const DataProvider = ({ children }) => {
                 const processedAppendTime = processAppendData(parsedAppendTime, mappings);
 
                 // Process Telesales (Use direct normalizer)
-                const processedTelesales = parsedTelesales.map(row => ({
-                    ...row,
-                    // Try robust product lookup
-                    Product_Normalized: normalizeProduct(row.Product || row.product || row.Product_Normalized, mappings)
-                }));
+                // const processedTelesales = parsedTelesales.map(row => ({
+                //     ...row,
+                //     // Try robust product lookup
+                //     Product_Normalized: normalizeProduct(row.Product || row.product || row.Product_Normalized, mappings)
+                // }));
+                const processedTelesales = parsedTelesales; // Fallback to raw for now
 
                 // Wait, processSentData maps 'Product1' -> Normalized. Let's see what keys we expect from TL.
                 // If the user didn't specify schema, we can assume standard or robustly normalize 'Product' column.
