@@ -84,6 +84,7 @@ const mapRow = (type, row) => {
             // DB: day, time_of_day, campaign_name, campaign_id, ad_set_name, ad_set_id, ad_name, ad_id, leads, cost
             return {
                 day: getVal(['Day', 'day']),
+                product: getVal(['Product', 'product', 'Product_Normalized']),
                 time_of_day: getVal(['Time', 'time', 'Time_of_Day', 'time_of_day']),
                 campaign_name: getVal(['Campaign_Name', 'campaign_name', 'Campaign Name']),
                 campaign_id: getVal(['Campaign_ID', 'campaign_id', 'Campaign ID']),
@@ -132,9 +133,9 @@ export const syncSheetToSupabase = async (type) => {
     }
 
     // Transform & Enrich
-    // We need to enrich specific types that require Product derivation (append, sent)
+    // We need to enrich specific types that require Product derivation (append, sent, append_time)
     let enrichedData = parsedData;
-    if (type === 'append') {
+    if (type === 'append' || type === 'append_time') {
         enrichedData = processAppendData(parsedData, mappings);
     } else if (type === 'sent') {
         enrichedData = processSentData(parsedData, mappings);
