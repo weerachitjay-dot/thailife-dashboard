@@ -41,7 +41,7 @@ export const loginWithFacebook = () => {
             } else {
                 reject('User cancelled login or did not fully authorize.');
             }
-        }, { scope: 'public_profile,email' }); // Basic scopes only (ads_read requires App Review)
+        }, { scope: 'public_profile,email,ads_read' }); // ads_read enabled in FB App
     });
 };
 
