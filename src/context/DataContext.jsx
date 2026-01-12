@@ -203,24 +203,31 @@ export const DataProvider = ({ children }) => {
 
                 setAppendData(processedAppend);
                 setAppendTimeData(processedAppendTime);
-                setTelesalesData(parsedTelesales); // We'll process inside component or here. Let's send raw parsed for now or standardized.
+                setTelesalesData(parsedTelesales);
 
-                setAppendData(processedAppend);
-                setAppendTimeData(processedAppendTime);
+                // DEBUG: Comprehensive logging
+                console.log('DEBUG: ===== DATA LOADING COMPLETE =====');
+                console.log('DEBUG: appendRes type:', appendRes?.type);
+                console.log('DEBUG: appendRes count:', appendRes?.data?.length || 0);
+                console.log('DEBUG: processedAppend count:', processedAppend?.length || 0);
+                console.log('DEBUG: processedAppend sample:', processedAppend?.[0]);
+                console.log('DEBUG: parsedSent count:', parsedSent?.length || 0);
+                console.log('DEBUG: parsedTarget count:', parsedTarget?.length || 0);
 
-                console.log('DEBUG: appendTimeRes:', appendTimeRes);
-                console.log('DEBUG: processedAppendTime (Sample):', processedAppendTime[0]);
                 // Auto-set Date Range (Union of both datasets)
                 const appendDates = processedAppend.map(d => d.Day).filter(Boolean);
                 const timeDates = processedAppendTime.map(d => d.Day).filter(Boolean);
                 const allDates = [...new Set([...appendDates, ...timeDates])].sort();
 
-                console.log('DEBUG: All Dates:', allDates);
+                console.log('DEBUG: appendDates count:', appendDates.length);
+                console.log('DEBUG: All unique Dates:', allDates.slice(0, 5), '...', allDates.length, 'total');
 
                 if (allDates.length) {
+                    console.log('DEBUG: Setting dateRange:', allDates[0], 'to', allDates[allDates.length - 1]);
                     setDateRange({ start: allDates[0], end: allDates[allDates.length - 1] });
-                    // Also update campaign config default
                     setCampaignConfig(prev => ({ ...prev, start: allDates[0], end: allDates[allDates.length - 1] }));
+                } else {
+                    console.warn('DEBUG: No dates found! Check if Day field is being mapped correctly.');
                 }
 
                 setSentData(processSentData(parsedSent, mappings));
