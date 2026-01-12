@@ -140,9 +140,29 @@ export const DataProvider = ({ children }) => {
                 const appendTimeObj = extractData(appendTimeRes, SNIPPET_APPEND_TIME);
                 const telesalesObj = extractData(telesalesRes, ''); // No snippet for telesales?
 
+                // Normalize Supabase snake_case to expected CamelCase/UPPER keys
+                // Sent: day -> Day, product -> Product, leads_sent -> Leads_Sent
+                const normalizeSentRow = (row) => ({
+                    ...row,
+                    Day: row.Day || row.day,
+                    Product: row.Product || row.product,
+                    Leads_Sent: parseInt(row.Leads_Sent ?? row.leads_sent ?? 0)
+                });
+
+                // Targets: owner -> OWNER, type -> TYPE, product_target -> Product_Target, target_lead_sent -> Target_Lead_Sent
+                const normalizeTargetRow = (row) => ({
+                    ...row,
+                    OWNER: row.OWNER || row.owner,
+                    TYPE: row.TYPE || row.type,
+                    Product_Target: row.Product_Target || row.product_target,
+                    Target_Lead_Sent: parseInt(row.Target_Lead_Sent ?? row.target_lead_sent ?? 0),
+                    Target_CPL: parseFloat(row.Target_CPL ?? row.target_cpl ?? 0),
+                    Target_SellPrice: parseFloat(row.Target_SellPrice ?? row.target_sellprice ?? row.target_sell_price ?? 0)
+                });
+
                 const parsedAppend = appendObj.data;
-                const parsedSent = sentObj.data;
-                const parsedTarget = targetObj.data;
+                const parsedSent = Array.isArray(sentObj.data) ? sentObj.data.map(normalizeSentRow) : [];
+                const parsedTarget = Array.isArray(targetObj.data) ? targetObj.data.map(normalizeTargetRow) : [];
                 const parsedAppendTime = appendTimeObj.data;
                 const parsedTelesales = telesalesObj.data || [];
 
