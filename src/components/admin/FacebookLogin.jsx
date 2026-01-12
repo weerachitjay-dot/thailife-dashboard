@@ -1,128 +1,126 @@
 
 import React, { useState, useEffect } from 'react';
-import { Key, CheckCircle, Save, Trash2 } from 'lucide-react';
+import { Facebook, CheckCircle, AlertCircle } from 'lucide-react';
+import { initFacebookSdk, loginWithFacebook, getLoginStatus } from '../../lib/facebook';
 import { supabase } from '../../lib/supabase';
 import { SUPABASE_TABLES } from '../../utils/constants';
 
 const FacebookLogin = () => {
-    const [token, setToken] = useState('');
-    const [savedToken, setSavedToken] = useState(null);
+    const [status, setStatus] = useState('loading'); // loading, connected, disconnected, error
+    const [tokenData, setTokenData] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
 
     useEffect(() => {
-        // Load existing token from Supabase
-        const loadToken = async () => {
-            const { data } = await supabase
-                .from(SUPABASE_TABLES.AUTH)
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
+        const checkStatus = async () => {
+            try {
+                await initFacebookSdk();
+                const response = await getLoginStatus();
 
-            if (data) {
-                setSavedToken(data);
-                setToken(data.access_token || '');
+                if (response.status === 'connected') {
+                    // Check if we have this token in Supabase
+                    const { data, error } = await supabase
+                        .from(SUPABASE_TABLES.AUTH)
+                        .select('*')
+                        .eq('user_id', response.authResponse.userID)
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .single();
+
+                    if (data) {
+                        setTokenData(data);
+                        setStatus('connected');
+                    } else {
+                        // Connected in FB but not saved? Odd, but let's treat as connected but needs save
+                        setStatus('connected_unsaved');
+                    }
+                } else {
+                    setStatus('disconnected');
+                }
+            } catch (err) {
+                console.error("FB Init/Status Error:", err);
+                setStatus('error');
             }
         };
-        loadToken();
+
+        checkStatus();
     }, []);
 
-    const handleSave = async () => {
-        if (!token.trim()) {
-            setMessage('กรุณากรอก Token');
-            return;
-        }
-
+    const handleLogin = async () => {
         setLoading(true);
         try {
+            const authResponse = await loginWithFacebook();
+            console.log("FB Login Success:", authResponse);
+
+            // Save to Supabase
             const { error } = await supabase
                 .from(SUPABASE_TABLES.AUTH)
-                .insert({
-                    access_token: token.trim(),
-                    token_type: 'manual',
-                    user_id: 'manual_entry',
-                    expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString() // 60 days
-                });
+                .upsert({
+                    access_token: authResponse.accessToken,
+                    token_type: 'long-lived', // Assuming we might swap later, currently standard
+                    user_id: authResponse.userID,
+                    expires_at: new Date(Date.now() + authResponse.expiresIn * 1000).toISOString(),
+                    data_scope: authResponse.grantedScopes
+                }, { onConflict: 'user_id' }); // Maybe unique on user_id? Or just insert new? 
+            // Schema has PK id, but we want 1 active token per user usually.
+            // Let's just insert for now or upsert if we change schema to Unique UserID.
+            // Re-reading schema: PK is UUID. No unique constraint on user_id. 
+            // So this will insert new rows. That's fine for history.
 
             if (error) throw error;
 
-            setMessage('บันทึก Token สำเร็จ ✅');
-            setSavedToken({ access_token: token.trim() });
-        } catch (err) {
-            setMessage('เกิดข้อผิดพลาด: ' + err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+            setStatus('connected');
+            // Refresh data
+            const { data } = await supabase
+                .from(SUPABASE_TABLES.AUTH)
+                .select('*')
+                .eq('user_id', authResponse.userID)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single();
+            setTokenData(data);
 
-    const handleClear = async () => {
-        setLoading(true);
-        try {
-            await supabase.from(SUPABASE_TABLES.AUTH).delete().neq('id', '00000000-0000-0000-0000-000000000000');
-            setToken('');
-            setSavedToken(null);
-            setMessage('ลบ Token สำเร็จ');
         } catch (err) {
-            setMessage('เกิดข้อผิดพลาด: ' + err.message);
+            console.error("Login/Save Error:", err);
+            setStatus('error');
+            alert("Login failed: " + (err.message || err));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="glass-card p-6 rounded-2xl flex flex-col gap-4">
+        <div className="glass-card p-6 rounded-2xl flex flex-col items-start gap-4">
             <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2">
-                <Key className="w-5 h-5 text-blue-600" />
-                Facebook Access Token
+                <Facebook className="w-5 h-5 text-blue-600" />
+                Facebook Integration
             </h3>
 
-            <div className="space-y-3">
-                <input
-                    type="password"
-                    value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                    placeholder="Paste your Access Token here..."
-                    className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                />
+            <div className="flex items-center gap-4 w-full">
+                <button
+                    onClick={handleLogin}
+                    disabled={status === 'connected' || loading}
+                    className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${status === 'connected'
+                            ? 'bg-green-100 text-green-700 cursor-default'
+                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                        }`}
+                >
+                    {loading ? 'Connecting...' : status === 'connected' ? 'Connected' : 'Connect Facebook'}
+                    {status === 'connected' && <CheckCircle className="w-4 h-4" />}
+                </button>
 
-                <div className="flex gap-2">
-                    <button
-                        onClick={handleSave}
-                        disabled={loading}
-                        className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold flex items-center gap-2 hover:bg-blue-700 transition-all"
-                    >
-                        <Save className="w-4 h-4" />
-                        {loading ? 'Saving...' : 'Save Token'}
-                    </button>
-
-                    {savedToken && (
-                        <button
-                            onClick={handleClear}
-                            disabled={loading}
-                            className="px-4 py-2 rounded-lg bg-red-100 text-red-600 font-semibold flex items-center gap-2 hover:bg-red-200 transition-all"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            Clear
-                        </button>
-                    )}
-                </div>
-
-                {savedToken && (
-                    <div className="flex items-center gap-2 text-green-600 text-sm">
-                        <CheckCircle className="w-4 h-4" />
-                        Token saved: {savedToken.access_token?.substring(0, 20)}...
+                {status === 'connected' && tokenData && (
+                    <div className="text-xs text-slate-500">
+                        <p>User ID: {tokenData.user_id}</p>
+                        <p>Expires: {new Date(tokenData.expires_at).toLocaleDateString()}</p>
                     </div>
                 )}
 
-                {message && (
-                    <p className="text-sm text-slate-600">{message}</p>
+                {status === 'error' && (
+                    <span className="text-red-500 text-sm flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" /> Connection Failed
+                    </span>
                 )}
             </div>
-
-            <p className="text-xs text-slate-400">
-                วิธีหา Token: ไปที่ Facebook Graph API Explorer → Generate Access Token → Copy มาวางที่นี่
-            </p>
         </div>
     );
 };
