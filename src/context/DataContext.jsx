@@ -184,12 +184,12 @@ export const DataProvider = ({ children }) => {
 
                 console.log('DEBUG: appendTimeRes:', appendTimeRes);
                 console.log('DEBUG: processedAppendTime (Sample):', processedAppendTime[0]);
-                console.log('DEBUG: All Dates:', allDates);
-
                 // Auto-set Date Range (Union of both datasets)
                 const appendDates = processedAppend.map(d => d.Day).filter(Boolean);
                 const timeDates = processedAppendTime.map(d => d.Day).filter(Boolean);
                 const allDates = [...new Set([...appendDates, ...timeDates])].sort();
+
+                console.log('DEBUG: All Dates:', allDates);
 
                 if (allDates.length) {
                     setDateRange({ start: allDates[0], end: allDates[allDates.length - 1] });
