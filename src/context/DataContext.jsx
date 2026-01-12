@@ -4,13 +4,7 @@ import { supabase } from '../lib/supabase';
 import { SHEET_CONFIG, SUPABASE_TABLES, SNIPPET_APPEND, SNIPPET_APPENDSENT, SNIPPET_TARGET, SNIPPET_APPEND_TIME } from '../utils/constants';
 import { parseCSV, processAppendData, processSentData, normalizeProduct } from '../utils/formatters';
 
-// ... (in DataContext)
 
-// Process Telesales
-const processedTelesales = parsedTelesales.map(row => ({
-    ...row,
-    Product_Normalized: normalizeProduct(row.Product || row.product, mappings)
-}));
 
 const DataContext = createContext();
 
