@@ -291,8 +291,8 @@ export const processSentData = (data, mappings = []) => {
     if (!Array.isArray(data)) return [];
     return data.map(row => ({
         ...row,
-        Product_Normalized: normalizeProduct(row.Product1, mappings),
-        Day: row.Day
+        Product_Normalized: normalizeProduct(row.Product1 || row.product || row.Product, mappings),
+        Day: row.Day || row.day
     }));
 };
 

@@ -110,45 +110,48 @@ export const DataProvider = ({ children }) => {
                     return null;
                 };
 
-                // Specialized Fetch for Time Analysis (Prioritize Supabase)
-                const fetchAppendTime = async () => {
-                    const sb = await fetchSupabaseData('TIME_ANALYSIS');
-                    if (sb) return sb;
-                    return await fetchData('append_time');
+                const fetchWithSupabasePriority = async (type, tableKey) => {
+                    // 1. Try Supabase
+                    const sb = await fetchSupabaseData(tableKey);
+                    if (sb) return sb; // { data: [...], type: 'supabase' }
+
+                    // 2. Fallback to Helper
+                    return await fetchData(type);
                 };
 
                 const [appendRes, sentRes, targetRes, appendTimeRes, telesalesRes] = await Promise.all([
-                    fetchData('append'),
-                    fetchData('sent'),
-                    fetchData('target'),
-                    fetchAppendTime(),
-                    fetchData('telesales')
+                    fetchWithSupabasePriority('append', 'APPEND'),
+                    fetchWithSupabasePriority('sent', 'SENT'),
+                    fetchWithSupabasePriority('target', 'TARGETS'),
+                    fetchWithSupabasePriority('append_time', 'TIME_ANALYSIS'),
+                    fetchWithSupabasePriority('telesales', 'TELESALES')
                 ]);
 
-                const appendText = appendRes ? appendRes.text : SNIPPET_APPEND;
-                const sentText = sentRes ? sentRes.text : SNIPPET_APPENDSENT;
-                const targetText = targetRes ? targetRes.text : SNIPPET_TARGET;
-                // Handle mixed types for appendTime
-                let parsedAppendTime = [];
-                if (appendTimeRes && appendTimeRes.type === 'supabase') {
-                    parsedAppendTime = appendTimeRes.data;
-                    setDataSource('Supabase + Sheets');
-                } else {
-                    const appendTimeText = appendTimeRes ? appendTimeRes.text : SNIPPET_APPEND_TIME;
-                    parsedAppendTime = parseCSV(appendTimeText);
-                }
+                // Helper to extract data (CSV Text OR Array objects)
+                const extractData = (res, snippet) => {
+                    if (res?.type === 'supabase') return { data: res.data, isSupabase: true };
+                    return { data: parseCSV(res ? res.text : snippet), isSupabase: false };
+                };
 
-                const telesalesText = telesalesRes ? telesalesRes.text : '';
+                const appendObj = extractData(appendRes, SNIPPET_APPEND);
+                const sentObj = extractData(sentRes, SNIPPET_APPENDSENT);
+                const targetObj = extractData(targetRes, SNIPPET_TARGET);
+                const appendTimeObj = extractData(appendTimeRes, SNIPPET_APPEND_TIME);
+                const telesalesObj = extractData(telesalesRes, ''); // No snippet for telesales?
 
-                if (!appendRes && !sentRes && !targetRes && !appendTimeRes && !telesalesRes) {
+                const parsedAppend = appendObj.data;
+                const parsedSent = sentObj.data;
+                const parsedTarget = targetObj.data;
+                const parsedAppendTime = appendTimeObj.data;
+                const parsedTelesales = telesalesObj.data || [];
+
+                if (appendObj.isSupabase || sentObj.isSupabase || targetObj.isSupabase || appendTimeObj.isSupabase) {
+                    setDataSource('Supabase');
+                } else if (!appendRes && !sentRes && !targetRes) {
                     setDataSource('Demo Data (Snippets)');
+                } else {
+                    setDataSource('Google Sheets / Local');
                 }
-
-                const parsedAppend = parseCSV(appendText);
-                const parsedSent = parseCSV(sentText);
-                const parsedTarget = parseCSV(targetText);
-                // parsedAppendTime is already handled above
-                const parsedTelesales = telesalesText ? parseCSV(telesalesText) : [];
 
                 setRawData({ append: parsedAppend, sent: parsedSent, target: parsedTarget, appendTime: parsedAppendTime, telesales: parsedTelesales });
 
@@ -161,7 +164,12 @@ export const DataProvider = ({ children }) => {
                 //     // Try robust product lookup
                 //     Product_Normalized: normalizeProduct(row.Product || row.product || row.Product_Normalized, mappings)
                 // }));
-                const processedTelesales = parsedTelesales; // Fallback to raw for now
+                // Process Telesales (Use direct normalizer)
+                const processedTelesales = Array.isArray(parsedTelesales) ? parsedTelesales.map(row => ({
+                    ...row,
+                    // Try robust product lookup
+                    Product_Normalized: normalizeProduct(row.Product || row.product || row.Product_Normalized, mappings)
+                })) : [];
 
                 // Wait, processSentData maps 'Product1' -> Normalized. Let's see what keys we expect from TL.
                 // If the user didn't specify schema, we can assume standard or robustly normalize 'Product' column.
