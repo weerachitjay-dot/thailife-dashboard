@@ -100,15 +100,20 @@ const mapRow = (type, row) => {
         case 'target':
             // CSV: OWNER, TYPE, Product_Target, Target_Lead_Sent, Target_SellPrice, Target_CPL, Target_CPL2
             // DB: owner, type, product_target, target_lead_sent, target_sell_price, target_cpl, target_cpl2
-            return {
+            const mappedTarget = {
                 owner: getVal(['OWNER', 'Owner', 'owner']),
                 type: getVal(['TYPE', 'Type', 'type']),
                 product_target: getVal(['Product_Target', 'Product Target', 'product_target']),
-                target_lead_sent: parseInt(getVal(['Target_Lead_Sent', 'Target Lead Sent']) || 0),
-                target_sell_price: parseFloat(getVal(['Target_SellPrice', 'Target_Sell_Price', 'target_sell_price']) || 0),
-                target_cpl: parseFloat(getVal(['Target_CPL', 'Target CPL']) || 0),
-                target_cpl2: parseFloat(getVal(['Target_CPL2', 'Target_CPL_2', 'target_cpl2']) || 0)
+                target_lead_sent: parseInt(getVal(['Target_Lead_Sent', 'Target Lead Sent', 'target_lead_sent']) || 0),
+                target_sell_price: parseFloat(getVal([
+                    'Target_SellPrice', 'Target_Sell_Price', 'target_sell_price', 'target_sellprice',
+                    'TargetSellPrice', 'Target SellPrice', 'Sell_Price', 'SellPrice', 'sell_price'
+                ]) || 0),
+                target_cpl: parseFloat(getVal(['Target_CPL', 'Target CPL', 'target_cpl', 'TargetCPL']) || 0),
+                target_cpl2: parseFloat(getVal(['Target_CPL2', 'Target_CPL_2', 'target_cpl2', 'TargetCPL2', 'Target CPL2']) || 0)
             };
+            console.log('DEBUG: Target Row Mapped:', mappedTarget);
+            return mappedTarget;
         case 'append_time':
             // CSV: Day, Time_of_Day, Campaign_Name, Campaign_ID, Ad_Set_Name, Ad_Set_ID, Ad_Name, Ad_ID, Leads, Cost
             // DB: day, time_of_day, campaign_name, campaign_id, ad_set_name, ad_set_id, ad_name, ad_id, leads, cost
