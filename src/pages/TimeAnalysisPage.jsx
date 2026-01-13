@@ -188,7 +188,7 @@ const TimeAnalysisPage = () => {
         };
     }, [processedData]);
 
-    // --- INSIGHTS: Best Hour, Best CPL, Weekend Analysis ---
+    // --- INSIGHTS: Best Hour, Best Day, CPL Analysis (based on filtered data) ---
     const insights = useMemo(() => {
         // Best Hour for Leads (highest leads)
         const bestHourLeads = hourlyStats.reduce((best, h) => (h.Leads > best.Leads ? h : best), hourlyStats[0] || { name: '--', Leads: 0 });
@@ -197,25 +197,22 @@ const TimeAnalysisPage = () => {
         const validCPLHours = hourlyStats.filter(h => h.CPL > 0);
         const bestHourCPL = validCPLHours.reduce((best, h) => (h.CPL < best.CPL ? h : best), validCPLHours[0] || { name: '--', CPL: 0 });
 
-        // Weekend Analysis (Saturday=6, Sunday=0)
-        const saturday = dayOfWeekStats.find(d => d.id === 6) || { name: 'Saturday', Total_Leads: 0, Total_Cost: 0, CPL: 0 };
-        const sunday = dayOfWeekStats.find(d => d.id === 0) || { name: 'Sunday', Total_Leads: 0, Total_Cost: 0, CPL: 0 };
+        // Best DAY for Leads (ALL 7 days)
+        const bestDayLeads = dayOfWeekStats.reduce((best, d) => (d.Total_Leads > best.Total_Leads ? d : best), dayOfWeekStats[0] || { name: '--', Total_Leads: 0 });
 
-        const highestLeadsDay = saturday.Total_Leads >= sunday.Total_Leads ? saturday : sunday;
-        const highestCostDay = saturday.Total_Cost >= sunday.Total_Cost ? saturday : sunday;
-        const highestCPLDay = saturday.CPL >= sunday.CPL ? saturday : sunday;
-        const lowestCPLDay = (saturday.CPL > 0 && (saturday.CPL <= sunday.CPL || sunday.CPL === 0)) ? saturday :
-            (sunday.CPL > 0 ? sunday : saturday);
+        // Best DAY for CPL (lowest CPL, excluding 0, ALL 7 days)
+        const validCPLDays = dayOfWeekStats.filter(d => d.CPL > 0);
+        const bestDayCPL = validCPLDays.reduce((best, d) => (d.CPL < best.CPL ? d : best), validCPLDays[0] || { name: '--', CPL: 0 });
+
+        // Highest Cost Day
+        const highestCostDay = dayOfWeekStats.reduce((best, d) => (d.Total_Cost > best.Total_Cost ? d : best), dayOfWeekStats[0] || { name: '--', Total_Cost: 0 });
 
         return {
             bestHourLeads,
             bestHourCPL,
-            saturday,
-            sunday,
-            highestLeadsDay,
-            highestCostDay,
-            highestCPLDay,
-            lowestCPLDay
+            bestDayLeads,
+            bestDayCPL,
+            highestCostDay
         };
     }, [hourlyStats, dayOfWeekStats]);
 
@@ -232,7 +229,7 @@ const TimeAnalysisPage = () => {
                     <TrendingUp className="w-5 h-5 text-indigo-600" />
                     <h3 className="text-lg font-bold text-slate-800">📊 สรุป Insights</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {/* Best Hour for Leads */}
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-amber-200">
                         <p className="text-xs text-amber-600 font-semibold uppercase mb-1">⏰ ช่วงเวลา Leads มากที่สุด</p>
@@ -247,18 +244,25 @@ const TimeAnalysisPage = () => {
                         <p className="text-sm text-slate-500">฿{(insights.bestHourCPL?.CPL || 0).toFixed(0)} / Lead</p>
                     </div>
 
-                    {/* Weekend: Highest Leads */}
+                    {/* Best Day for Leads */}
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-indigo-200">
-                        <p className="text-xs text-indigo-600 font-semibold uppercase mb-1">📅 วันหยุด Leads สูงสุด</p>
-                        <p className="text-2xl font-bold text-slate-900">{insights.highestLeadsDay?.name || '--'}</p>
-                        <p className="text-sm text-slate-500">{insights.highestLeadsDay?.Total_Leads?.toLocaleString() || 0} Leads • ฿{(insights.highestLeadsDay?.Total_Cost || 0).toLocaleString()}</p>
+                        <p className="text-xs text-indigo-600 font-semibold uppercase mb-1">📅 วัน Leads สูงสุด</p>
+                        <p className="text-2xl font-bold text-slate-900">{insights.bestDayLeads?.name || '--'}</p>
+                        <p className="text-sm text-slate-500">{insights.bestDayLeads?.Total_Leads?.toLocaleString() || 0} Leads</p>
                     </div>
 
-                    {/* Weekend: Better CPL */}
+                    {/* Best Day for CPL */}
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-violet-200">
-                        <p className="text-xs text-violet-600 font-semibold uppercase mb-1">🎯 วันหยุด CPL ดีกว่า</p>
-                        <p className="text-2xl font-bold text-slate-900">{insights.lowestCPLDay?.name || '--'}</p>
-                        <p className="text-sm text-slate-500">฿{(insights.lowestCPLDay?.CPL || 0).toFixed(0)} vs ฿{insights.lowestCPLDay?.id === 6 ? (insights.sunday?.CPL || 0).toFixed(0) : (insights.saturday?.CPL || 0).toFixed(0)}</p>
+                        <p className="text-xs text-violet-600 font-semibold uppercase mb-1">🎯 วัน CPL ถูกที่สุด</p>
+                        <p className="text-2xl font-bold text-slate-900">{insights.bestDayCPL?.name || '--'}</p>
+                        <p className="text-sm text-slate-500">฿{(insights.bestDayCPL?.CPL || 0).toFixed(0)} / Lead</p>
+                    </div>
+
+                    {/* Highest Cost Day */}
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-rose-200">
+                        <p className="text-xs text-rose-600 font-semibold uppercase mb-1">💸 วันใช้งบสูงสุด</p>
+                        <p className="text-2xl font-bold text-slate-900">{insights.highestCostDay?.name || '--'}</p>
+                        <p className="text-sm text-slate-500">฿{(insights.highestCostDay?.Total_Cost || 0).toLocaleString()}</p>
                     </div>
                 </div>
             </div>
