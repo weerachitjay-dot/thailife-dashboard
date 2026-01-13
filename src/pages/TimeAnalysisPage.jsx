@@ -266,8 +266,8 @@ const TimeAnalysisPage = () => {
                             <PieChart>
                                 <Pie
                                     data={[
-                                        { name: 'Daily', value: totals.daily, color: '#4f46e5' }, // Indigo-600
-                                        { name: 'Carry', value: totals.carry, color: '#7c3aed' }  // Violet-600
+                                        { name: 'Daily', value: totals.daily, color: '#f59e0b' }, // Amber (Day)
+                                        { name: 'Carry', value: totals.carry, color: '#6366f1' }  // Indigo (Night)
                                     ]}
                                     innerRadius={60}
                                     outerRadius={80}
@@ -275,8 +275,8 @@ const TimeAnalysisPage = () => {
                                     dataKey="value"
                                 >
                                     {[
-                                        { name: 'Daily', value: totals.daily, color: '#4f46e5' },
-                                        { name: 'Carry', value: totals.carry, color: '#7c3aed' }
+                                        { name: 'Daily', value: totals.daily, color: '#f59e0b' },
+                                        { name: 'Carry', value: totals.carry, color: '#6366f1' }
                                     ].map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                     ))}
@@ -302,8 +302,8 @@ const TimeAnalysisPage = () => {
                                     contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', color: '#0f172a' }}
                                 />
                                 <Legend formatter={(value) => <span className="text-slate-700 font-medium">{value}</span>} />
-                                <Bar dataKey="Daily_Leads" name="Daily (09:00-17:59)" stackId="a" fill="#4f46e5" radius={[0, 0, 4, 4]} />
-                                <Bar dataKey="Carry_Leads" name="Carry (18:00-08:59)" stackId="a" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="Daily_Leads" name="Daily (09:00-17:59)" stackId="a" fill="#f59e0b" radius={[0, 0, 4, 4]} />
+                                <Bar dataKey="Carry_Leads" name="Carry (18:00-08:59)" stackId="a" fill="#6366f1" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -329,8 +329,8 @@ const TimeAnalysisPage = () => {
                                     formatter={(value) => `฿${parseFloat(value).toFixed(0)}`}
                                 />
                                 <Legend formatter={(value) => <span className="text-slate-700 font-medium">{value}</span>} />
-                                <Bar dataKey="Daily_CPL" name="Daily CPL" fill="#4f46e5" radius={[4, 4, 0, 0]} barSize={30} />
-                                <Bar dataKey="Carry_CPL" name="Carry CPL" fill="#7c3aed" radius={[4, 4, 0, 0]} barSize={30} />
+                                <Bar dataKey="Daily_CPL" name="Daily CPL" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={30} />
+                                <Bar dataKey="Carry_CPL" name="Carry CPL" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={30} />
                                 <Bar dataKey="CPL" name="Avg CPL" fill="#10b981" radius={[4, 4, 0, 0]} barSize={15} />
                             </BarChart>
                         </ResponsiveContainer>
