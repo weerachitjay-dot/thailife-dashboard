@@ -45,8 +45,8 @@ const SyncRow = ({ label, type }) => {
                     onClick={handleSync}
                     disabled={status === 'syncing'}
                     className={`p-2 rounded-lg transition-all ${status === 'syncing'
-                        ? 'bg-slate-100 text-slate-400'
-                        : 'bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 shadow-sm'
+                            ? 'bg-slate-100 text-slate-400'
+                            : 'bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 shadow-sm'
                         }`}
                 >
                     <RefreshCw className={`w-4 h-4 ${status === 'syncing' ? 'animate-spin' : ''}`} />
@@ -68,7 +68,11 @@ const SyncControl = () => {
             </div>
 
             <div className="space-y-3">
+                <SyncRow label="Append Data (Main)" type="append" />
+                <SyncRow label="Sent Leads" type="sent" />
+                <SyncRow label="Targets & Owners" type="target" />
                 <SyncRow label="Time Analysis" type="append_time" />
+                {/* Telesales might not be fully ready in config or CSV, check constants */}
                 <SyncRow label="Telesales Data" type="telesales" />
             </div>
         </div>
