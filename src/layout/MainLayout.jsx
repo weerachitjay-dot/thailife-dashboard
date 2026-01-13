@@ -51,17 +51,6 @@ const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
                         </p>
                     </div>
                     <div className="flex gap-3 items-end">
-                        <div className="flex gap-3">
-                            {['Append', 'Sent', 'Target'].map(type => (
-                                <label key={type} className="cursor-pointer bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all group">
-                                    <FileSpreadsheet className="w-4 h-4 text-green-600 group-hover:scale-110 transition-transform" />
-                                    <div className="flex flex-col items-start">
-                                        <span>{type}</span>
-                                    </div>
-                                    <input type="file" accept=".csv, .xlsx, .xls" className="hidden" onChange={(e) => handleFileUpload(e, type.toLowerCase())} />
-                                </label>
-                            ))}
-                        </div>
                         <button onClick={onLogout} className="bg-white border border-rose-200 text-rose-600 shadow-sm hover:shadow-md hover:border-rose-300 px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all group">
                             <LogOut className="w-4 h-4 group-hover:rotate-180 transition-transform" />
                         </button>
