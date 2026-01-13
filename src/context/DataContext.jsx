@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../lib/supabase';
+import { getCachedData, setCachedData } from '../lib/cache';
 import { SHEET_CONFIG, SUPABASE_TABLES, SNIPPET_APPEND, SNIPPET_APPENDSENT, SNIPPET_TARGET, SNIPPET_APPEND_TIME } from '../utils/constants';
 import { parseCSV, processAppendData, processSentData, normalizeProduct } from '../utils/formatters';
 
@@ -100,19 +101,12 @@ export const DataProvider = ({ children }) => {
                     if (!supabase) return null;
 
                     const CACHE_KEY = `cache_${tableName}`;
-                    const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
                     try {
-                        // Check sessionStorage cache first
-                        const cached = sessionStorage.getItem(CACHE_KEY);
-                        if (cached) {
-                            const { data, timestamp } = JSON.parse(cached);
-                            if (Date.now() - timestamp < CACHE_TTL) {
-                                console.log(`DEBUG: Using cached data for ${tableName} (${data.length} rows)`);
-                                return { data, type: 'supabase' };
-                            }
-                            // Cache expired, remove it
-                            sessionStorage.removeItem(CACHE_KEY);
+                        // Check IndexedDB cache first (supports large data)
+                        const cachedData = await getCachedData(CACHE_KEY);
+                        if (cachedData && cachedData.length > 0) {
+                            return { data: cachedData, type: 'supabase' };
                         }
 
                         // Fetch ALL rows using pagination (Supabase limits to 1000 per request)
@@ -146,16 +140,9 @@ export const DataProvider = ({ children }) => {
 
                         console.log(`DEBUG: Fetched ${allData.length} total rows from ${tableName}`);
 
-                        // Save to sessionStorage cache
+                        // Save to IndexedDB cache (no size limit)
                         if (allData.length > 0) {
-                            try {
-                                sessionStorage.setItem(CACHE_KEY, JSON.stringify({
-                                    data: allData,
-                                    timestamp: Date.now()
-                                }));
-                            } catch (e) {
-                                console.warn('Cache storage failed (possibly too large):', e.message);
-                            }
+                            await setCachedData(CACHE_KEY, allData);
                             return { data: allData, type: 'supabase' };
                         }
                     } catch (e) {
