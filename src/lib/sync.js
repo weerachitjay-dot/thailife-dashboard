@@ -98,14 +98,16 @@ const mapRow = (type, row) => {
                 leads_sent: parseInt(getVal(['Leads_Sent', 'leads_sent', 'Leads Sent']) || 0)
             };
         case 'target':
-            // CSV: OWNER, TYPE, Product_Target, Target_Lead_Sent, Target_CPL
-            // DB: owner, type, product_target, target_lead_sent, target_cpl
+            // CSV: OWNER, TYPE, Product_Target, Target_Lead_Sent, Target_SellPrice, Target_CPL, Target_CPL2
+            // DB: owner, type, product_target, target_lead_sent, target_sell_price, target_cpl, target_cpl2
             return {
                 owner: getVal(['OWNER', 'Owner', 'owner']),
                 type: getVal(['TYPE', 'Type', 'type']),
                 product_target: getVal(['Product_Target', 'Product Target', 'product_target']),
                 target_lead_sent: parseInt(getVal(['Target_Lead_Sent', 'Target Lead Sent']) || 0),
-                target_cpl: parseFloat(getVal(['Target_CPL', 'Target CPL']) || 0)
+                target_sell_price: parseFloat(getVal(['Target_SellPrice', 'Target_Sell_Price', 'target_sell_price']) || 0),
+                target_cpl: parseFloat(getVal(['Target_CPL', 'Target CPL']) || 0),
+                target_cpl2: parseFloat(getVal(['Target_CPL2', 'Target_CPL_2', 'target_cpl2']) || 0)
             };
         case 'append_time':
             // CSV: Day, Time_of_Day, Campaign_Name, Campaign_ID, Ad_Set_Name, Ad_Set_ID, Ad_Name, Ad_ID, Leads, Cost

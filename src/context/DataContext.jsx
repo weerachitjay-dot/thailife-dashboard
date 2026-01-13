@@ -173,7 +173,7 @@ export const DataProvider = ({ children }) => {
                     Leads_Sent: parseInt(row.Leads_Sent ?? row.leads_sent ?? 0)
                 });
 
-                // Targets: owner -> OWNER, type -> TYPE, product_target -> Product_Target, target_lead_sent -> Target_Lead_Sent
+                // Targets: owner -> OWNER, type -> TYPE, etc.
                 const normalizeTargetRow = (row) => ({
                     ...row,
                     OWNER: row.OWNER || row.owner,
@@ -181,6 +181,7 @@ export const DataProvider = ({ children }) => {
                     Product_Target: row.Product_Target || row.product_target,
                     Target_Lead_Sent: parseInt(row.Target_Lead_Sent ?? row.target_lead_sent ?? 0),
                     Target_CPL: parseFloat(row.Target_CPL ?? row.target_cpl ?? 0),
+                    Target_CPL2: parseFloat(row.Target_CPL2 ?? row.target_cpl2 ?? 0),
                     Target_SellPrice: parseFloat(row.Target_SellPrice ?? row.target_sellprice ?? row.target_sell_price ?? 0)
                 });
 
