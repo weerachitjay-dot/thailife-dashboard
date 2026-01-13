@@ -99,12 +99,29 @@ export const DataProvider = ({ children }) => {
                     if (!tableName) return null;
                     if (!supabase) return null;
 
+                    const CACHE_KEY = `cache_${tableName}`;
+                    const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
                     try {
+                        // Check sessionStorage cache first
+                        const cached = sessionStorage.getItem(CACHE_KEY);
+                        if (cached) {
+                            const { data, timestamp } = JSON.parse(cached);
+                            if (Date.now() - timestamp < CACHE_TTL) {
+                                console.log(`DEBUG: Using cached data for ${tableName} (${data.length} rows)`);
+                                return { data, type: 'supabase' };
+                            }
+                            // Cache expired, remove it
+                            sessionStorage.removeItem(CACHE_KEY);
+                        }
+
                         // Fetch ALL rows using pagination (Supabase limits to 1000 per request)
                         let allData = [];
                         let from = 0;
                         const batchSize = 1000;
                         let hasMore = true;
+
+                        console.log(`DEBUG: Fetching from ${tableName}...`);
 
                         while (hasMore) {
                             const { data, error } = await supabase
@@ -121,13 +138,26 @@ export const DataProvider = ({ children }) => {
                                 allData = [...allData, ...data];
                                 from += batchSize;
                                 hasMore = data.length === batchSize;
+                                console.log(`DEBUG: ${tableName} - loaded ${allData.length} rows...`);
                             } else {
                                 hasMore = false;
                             }
                         }
 
                         console.log(`DEBUG: Fetched ${allData.length} total rows from ${tableName}`);
-                        if (allData.length > 0) return { data: allData, type: 'supabase' };
+
+                        // Save to sessionStorage cache
+                        if (allData.length > 0) {
+                            try {
+                                sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+                                    data: allData,
+                                    timestamp: Date.now()
+                                }));
+                            } catch (e) {
+                                console.warn('Cache storage failed (possibly too large):', e.message);
+                            }
+                            return { data: allData, type: 'supabase' };
+                        }
                     } catch (e) {
                         console.warn('Supabase connection failed:', e);
                     }
