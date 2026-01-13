@@ -55,6 +55,18 @@ const TimeAnalysisPage = () => {
         }).filter(Boolean);
     }, [appendTimeData, targetData, filters, dateRange]);
 
+    // DEBUG: Log processedData stats
+    React.useEffect(() => {
+        if (processedData.length > 0) {
+            const totalCost = processedData.reduce((sum, d) => sum + (parseFloat(d.Cost) || 0), 0);
+            const totalLeads = processedData.reduce((sum, d) => sum + (parseInt(d.Leads) || 0), 0);
+            console.log('DEBUG: TimeAnalysis - processedData count:', processedData.length);
+            console.log('DEBUG: TimeAnalysis - Total Cost (should match segments):', totalCost.toFixed(2));
+            console.log('DEBUG: TimeAnalysis - Total Leads:', totalLeads);
+            console.log('DEBUG: TimeAnalysis - processedData sample:', processedData[0]);
+        }
+    }, [processedData]);
+
     // --- AGGREGATION: By Hour ---
     const hourlyStats = useMemo(() => {
         const hours = Array(24).fill(0).map((_, i) => ({
