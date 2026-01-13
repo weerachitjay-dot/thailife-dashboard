@@ -199,7 +199,7 @@ export const syncSheetToSupabase = async (type) => {
             break;
         case 'append_time':
             tableName = SUPABASE_TABLES.TIME_ANALYSIS;
-            conflictColumns = 'day,time_of_day,ad_id';
+            conflictColumns = 'day,time_of_day,campaign_id'; // Changed: Use campaign_id instead of ad_id
             break;
         case 'telesales':
             tableName = SUPABASE_TABLES.TELESALES;
