@@ -70,8 +70,9 @@ const mapRow = (type, row) => {
             // Derive Product from Campaign Name if not explicit
             const product = getVal(['Product', 'product', 'Product_Normalized']) || '';
 
-            // Generate unique row_hash from ALL columns to prevent aggregation
-            const rowHash = `${day}|${campaignName}|${adSetName}|${adName}|${reach}|${impressions}|${clicks}|${websiteLeads}|${cost}|${metaLeads}|${leads}|${messagingConversations}`;
+            // Generate unique row_hash from KEY columns only (not metrics) to enable proper upsert
+            // This ensures same day+campaign+adset+ad will UPDATE, not create duplicates
+            const rowHash = `${day}|${campaignName}|${adSetName}|${adName}`;
 
             return {
                 campaign_name: campaignName,
@@ -206,7 +207,7 @@ export const syncSheetToSupabase = async (type) => {
             break;
         case 'append_time':
             tableName = SUPABASE_TABLES.TIME_ANALYSIS;
-            conflictColumns = 'day,time_of_day,campaign_id'; // Changed: Use campaign_id instead of ad_id
+            conflictColumns = 'day,time_of_day,ad_id'; // Use day+time+ad_id for unique identification
             break;
         case 'telesales':
             tableName = SUPABASE_TABLES.TELESALES;
@@ -280,7 +281,7 @@ export const syncSheetToSupabase = async (type) => {
         const { error } = await supabase
             .from(tableName)
             .upsert(chunk, {
-                ignoreDuplicates: true, // Changed: Skip duplicates instead of overwriting
+                ignoreDuplicates: false, // FIXED: Allow updates to overwrite existing data
                 onConflict: conflictColumns
             });
 
