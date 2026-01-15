@@ -21,6 +21,11 @@ export const DataProvider = ({ children }) => {
     const [appendTimeData, setAppendTimeData] = useState([]);
     const [telesalesData, setTelesalesData] = useState([]);
 
+    // Loading State Management
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadingProgress, setLoadingProgress] = useState(0);
+    const [loadingStatus, setLoadingStatus] = useState('เริ่มต้นระบบ...');
+
     const [productMappings, setProductMappings] = useState([]);
 
     // Default to TODAY's date
@@ -38,6 +43,10 @@ export const DataProvider = ({ children }) => {
     useEffect(() => {
         const loadDefaultData = async () => {
             try {
+                setIsLoading(true);
+                setLoadingProgress(0);
+                setLoadingStatus('กำลังโหลด Product Mappings...');
+
                 // Fetch Product Mappings First
                 let mappings = [];
                 if (supabase) {
@@ -167,13 +176,29 @@ export const DataProvider = ({ children }) => {
                     return await fetchData(type);
                 };
 
-                const [appendRes, sentRes, targetRes, appendTimeRes, telesalesRes] = await Promise.all([
-                    fetchWithSupabasePriority('append', 'APPEND'),
-                    fetchWithSupabasePriority('sent', 'SENT'),
-                    fetchWithSupabasePriority('target', 'TARGETS'),
-                    fetchWithSupabasePriority('append_time', 'TIME_ANALYSIS'),
-                    fetchWithSupabasePriority('telesales', 'TELESALES')
-                ]);
+                // Sequential loading with progress updates
+                setLoadingProgress(10);
+                setLoadingStatus('กำลังโหลด Append Data...');
+                const appendRes = await fetchWithSupabasePriority('append', 'APPEND');
+
+                setLoadingProgress(30);
+                setLoadingStatus('กำลังโหลด Sent Leads...');
+                const sentRes = await fetchWithSupabasePriority('sent', 'SENT');
+
+                setLoadingProgress(50);
+                setLoadingStatus('กำลังโหลด Targets...');
+                const targetRes = await fetchWithSupabasePriority('target', 'TARGETS');
+
+                setLoadingProgress(70);
+                setLoadingStatus('กำลังโหลด Time Analysis...');
+                const appendTimeRes = await fetchWithSupabasePriority('append_time', 'TIME_ANALYSIS');
+
+                setLoadingProgress(85);
+                setLoadingStatus('กำลังโหลด Telesales...');
+                const telesalesRes = await fetchWithSupabasePriority('telesales', 'TELESALES');
+
+                setLoadingProgress(95);
+                setLoadingStatus('กำลังประมวลผลข้อมูล...');
 
                 const appendObj = extractData(appendRes, SNIPPET_APPEND);
                 const sentObj = extractData(sentRes, SNIPPET_APPENDSENT);
@@ -286,9 +311,16 @@ export const DataProvider = ({ children }) => {
                 setSentData(processSentData(parsedSent, mappings));
                 setTargetData(parsedTarget);
 
+                // Loading Complete
+                setLoadingProgress(100);
+                setLoadingStatus('พร้อมใช้งาน!');
+                setTimeout(() => setIsLoading(false), 500); // Brief delay for smooth transition
+
             } catch (err) {
                 console.error("Error loading data:", err);
                 setDataSource('Error Loading Data');
+                setLoadingStatus('เกิดข้อผิดพลาด');
+                setIsLoading(false);
             }
         };
 
@@ -360,7 +392,11 @@ export const DataProvider = ({ children }) => {
             setCampaignConfig, // Allow updating config
             handleFileUpload,
             filters, setFilters,
-            dateRange, setDateRange
+            dateRange, setDateRange,
+            // Loading State
+            isLoading,
+            loadingProgress,
+            loadingStatus
         }}>
             {children}
         </DataContext.Provider>
