@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { RefreshCw, Check, AlertTriangle, FileSpreadsheet } from 'lucide-react';
+import { RefreshCw, Check, AlertTriangle, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { syncSheetToSupabase } from '../../lib/sync';
+import { clearCache } from '../../lib/cache';
 
 const SyncRow = ({ label, type }) => {
     const [status, setStatus] = useState('idle'); // idle, syncing, success, error
@@ -45,8 +46,8 @@ const SyncRow = ({ label, type }) => {
                     onClick={handleSync}
                     disabled={status === 'syncing'}
                     className={`p-2 rounded-lg transition-all ${status === 'syncing'
-                            ? 'bg-slate-100 text-slate-400'
-                            : 'bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 shadow-sm'
+                        ? 'bg-slate-100 text-slate-400'
+                        : 'bg-white border border-slate-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 shadow-sm'
                         }`}
                 >
                     <RefreshCw className={`w-4 h-4 ${status === 'syncing' ? 'animate-spin' : ''}`} />
@@ -57,6 +58,20 @@ const SyncRow = ({ label, type }) => {
 };
 
 const SyncControl = () => {
+    const [isClearing, setIsClearing] = useState(false);
+
+    const handleForceRefresh = async () => {
+        setIsClearing(true);
+        try {
+            await clearCache();
+            // Reload the page to fetch fresh data
+            window.location.reload();
+        } catch (err) {
+            console.error('Failed to clear cache:', err);
+            setIsClearing(false);
+        }
+    };
+
     return (
         <div className="glass-card p-6 rounded-2xl space-y-4">
             <div className="flex items-center justify-between mb-2">
@@ -64,7 +79,21 @@ const SyncControl = () => {
                     <RefreshCw className="w-5 h-5 text-indigo-600" />
                     Data Sync Control
                 </h3>
-                <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded">Manual Mode</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleForceRefresh}
+                        disabled={isClearing}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isClearing
+                                ? 'bg-slate-100 text-slate-400'
+                                : 'bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200'
+                            }`}
+                        title="ล้าง Cache และโหลดข้อมูลใหม่"
+                    >
+                        <Trash2 className={`w-3.5 h-3.5 ${isClearing ? 'animate-spin' : ''}`} />
+                        {isClearing ? 'Clearing...' : 'Force Refresh'}
+                    </button>
+                    <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded">Manual Mode</span>
+                </div>
             </div>
 
             <div className="space-y-3">

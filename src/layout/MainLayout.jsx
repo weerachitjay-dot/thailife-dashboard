@@ -1,10 +1,23 @@
-import React from 'react';
-import { Activity, FileSpreadsheet, LogOut, Filter, Calendar, LayoutDashboard, Database, BarChart2, PieChart, Users, Settings, Table, Clock, FlaskConical, Layers } from 'lucide-react';
+import React, { useState } from 'react';
+import { Activity, FileSpreadsheet, LogOut, Filter, Calendar, LayoutDashboard, Database, BarChart2, PieChart, Users, Settings, Table, Clock, FlaskConical, Layers, RefreshCcw } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import DateRangePicker from '../components/common/DateRangePicker';
+import { clearCache } from '../lib/cache';
 
 const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
     const { dataSource, handleFileUpload, filters, setFilters, dateRange, setDateRange } = useData();
+    const [isRefreshing, setIsRefreshing] = useState(false);
+
+    const handleForceRefresh = async () => {
+        setIsRefreshing(true);
+        try {
+            await clearCache();
+            window.location.reload();
+        } catch (err) {
+            console.error('Failed to clear cache:', err);
+            setIsRefreshing(false);
+        }
+    };
 
     const menuItems = [
         { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -51,6 +64,18 @@ const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
                         </p>
                     </div>
                     <div className="flex gap-3 items-end">
+                        <button
+                            onClick={handleForceRefresh}
+                            disabled={isRefreshing}
+                            className={`border shadow-sm hover:shadow-md px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all group ${isRefreshing
+                                    ? 'bg-slate-100 border-slate-200 text-slate-400'
+                                    : 'bg-white border-orange-200 text-orange-600 hover:border-orange-300'
+                                }`}
+                            title="ล้าง Cache และโหลดข้อมูลใหม่"
+                        >
+                            <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : 'group-hover:rotate-180 transition-transform'}`} />
+                            <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+                        </button>
                         <button onClick={onLogout} className="bg-white border border-rose-200 text-rose-600 shadow-sm hover:shadow-md hover:border-rose-300 px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all group">
                             <LogOut className="w-4 h-4 group-hover:rotate-180 transition-transform" />
                         </button>
