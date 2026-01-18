@@ -20,9 +20,25 @@ const TimeAnalysisPage = () => {
     // But for raw analysis, we just classify them based on timestamp.
     const processedData = useMemo(() => {
         if (!Array.isArray(appendTimeData)) return [];
+
+        // DEBUG: Log raw data structure once
+        if (appendTimeData.length > 0 && !window._timeDebugLogged) {
+            window._timeDebugLogged = true;
+            console.log('DEBUG: appendTimeData raw sample:', appendTimeData[0]);
+            console.log('DEBUG: appendTimeData raw keys:', Object.keys(appendTimeData[0]));
+            console.log('DEBUG: appendTimeData total count:', appendTimeData.length);
+        }
+
         return appendTimeData.map(row => {
             // Handle both PascalCase (Time) and snake_case (time_of_day) from different sources
             const rawTime = row.Time || row.time_of_day || '';
+
+            // DEBUG: Log if rawTime is empty
+            if (!rawTime && !window._timeEmptyLogged) {
+                window._timeEmptyLogged = true;
+                console.log('DEBUG: Row with empty Time:', row);
+            }
+
             if (!rawTime) return null;
 
             // Parse Time - handle formats like "HH:mm:ss" or "HH:mm:ss - HH:mm:ss" 
