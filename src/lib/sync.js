@@ -2,6 +2,7 @@
 import { supabase } from './supabase';
 import { SHEET_CONFIG, SUPABASE_TABLES, SNIPPET_APPEND, SNIPPET_APPENDSENT, SNIPPET_TARGET } from '../utils/constants';
 import { parseCSV, processAppendData, processSentData } from '../utils/formatters';
+import { setCachedData } from './cache';
 
 // Helper to fetch CSV text
 const fetchSheetData = async (type) => {
@@ -291,6 +292,11 @@ export const syncSheetToSupabase = async (type) => {
         }
         successCount += chunk.length;
     }
+
+    // IMPORTANT: Invalidate cache so Dashboard loads fresh data
+    const cacheKey = `cache_${tableName}`;
+    console.log(`Invalidating cache for ${cacheKey}...`);
+    await setCachedData(cacheKey, null); // Set to null to force re-fetch
 
     return { success: true, count: successCount };
 };
