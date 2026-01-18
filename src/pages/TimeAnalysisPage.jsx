@@ -22,59 +22,111 @@ const TimeAnalysisPage = () => {
         if (!Array.isArray(appendTimeData)) return [];
 
         // DEBUG: Log raw data structure once
-        if (appendTimeData.length > 0 && !window._timeDebugLogged) {
-            window._timeDebugLogged = true;
-            console.log('DEBUG: appendTimeData raw sample:', appendTimeData[0]);
-            console.log('DEBUG: appendTimeData raw keys:', Object.keys(appendTimeData[0]));
-            console.log('DEBUG: appendTimeData total count:', appendTimeData.length);
+        if (appendTimeData.length > 0) {
+            console.log('=== TIME ANALYSIS DEBUG ===');
+            console.log('appendTimeData total count:', appendTimeData.length);
+            console.log('appendTimeData sample row:', appendTimeData[0]);
+            console.log('appendTimeData keys:', Object.keys(appendTimeData[0]));
         }
 
-        return appendTimeData.map(row => {
-            // Handle both PascalCase (Time) and snake_case (time_of_day) from different sources
-            const rawTime = row.Time || row.time_of_day || '';
+        // Track filtering stats
+        let stats = { total: 0, noTime: 0, badHour: 0, dateFilter: 0, productFilter: 0, ownerFilter: 0, passed: 0 };
 
-            // DEBUG: Log if rawTime is empty
-            if (!rawTime && !window._timeEmptyLogged) {
-                window._timeEmptyLogged = true;
-                console.log('DEBUG: Row with empty Time:', row);
+        const result = appendTimeData.map(row => {
+            stats.total++;
+
+            // Get Time from multiple possible field names
+            // After processAppendData: should have 'Time' (PascalCase)
+            // If raw from cache: might have 'time_of_day' (snake_case)
+            const rawTime = row.Time || row.time_of_day || row.Time_of_Day || '';
+
+            if (!rawTime) {
+                stats.noTime++;
+                return null;
             }
 
-            if (!rawTime) return null;
-
             // Parse Time - handle formats like "HH:mm:ss" or "HH:mm:ss - HH:mm:ss" 
-            let cleanTime = rawTime;
+            let cleanTime = String(rawTime);
             if (cleanTime.includes(' - ')) {
                 cleanTime = cleanTime.split(' - ')[0]; // Take start time only
             }
 
-            const [h, m] = cleanTime.split(':').map(Number);
-            if (isNaN(h)) return null;
+            const timeParts = cleanTime.split(':');
+            const h = parseInt(timeParts[0], 10);
+            if (isNaN(h)) {
+                stats.badHour++;
+                return null;
+            }
 
             let timeType = 'Daily';
             if (h >= 18 || h < 9) {
                 timeType = 'Carry';
             }
 
-            // Process Product normalization
-            const normalizedProduct = normalizeProduct(row.Product);
+            // Get Day from multiple possible field names
+            const rowDay = row.Day || row.day || '';
 
-            // Check filters
-            if (dateRange.start && row.Day < dateRange.start) return null;
-            if (dateRange.end && row.Day > dateRange.end) return null;
-            if (filters.product !== 'All' && normalizedProduct !== filters.product) return null;
+            // Check date filters
+            if (dateRange.start && rowDay < dateRange.start) {
+                stats.dateFilter++;
+                return null;
+            }
+            if (dateRange.end && rowDay > dateRange.end) {
+                stats.dateFilter++;
+                return null;
+            }
+
+            // Process Product normalization
+            const rowProduct = row.Product || row.product || '';
+            const normalizedProduct = normalizeProduct(rowProduct);
+
+            // Check product filter
+            if (filters.product !== 'All' && normalizedProduct !== filters.product) {
+                stats.productFilter++;
+                return null;
+            }
 
             // Check Owner/Type via Target Data lookup
             const targetInfo = targetData.find(t => t.Product_Target === normalizedProduct);
-            if (filters.owner !== 'All' && targetInfo?.OWNER !== filters.owner) return null;
-            if (filters.type !== 'All' && targetInfo?.TYPE !== filters.type) return null;
+            if (filters.owner !== 'All' && targetInfo?.OWNER !== filters.owner) {
+                stats.ownerFilter++;
+                return null;
+            }
+            if (filters.type !== 'All' && targetInfo?.TYPE !== filters.type) {
+                stats.ownerFilter++;
+                return null;
+            }
+
+            stats.passed++;
+
+            // Get Cost and Leads from multiple possible field names
+            const rowCost = parseFloat(row.Cost ?? row.cost ?? 0);
+            const rowLeads = parseInt(row.Leads ?? row.leads ?? 0);
 
             return {
                 ...row,
+                Day: rowDay,
+                Time: cleanTime,
+                Cost: rowCost,
+                Leads: rowLeads,
                 TimeType: timeType,
                 NormalizedProduct: normalizedProduct,
                 TargetInfo: targetInfo
             };
         }).filter(Boolean);
+
+        // Log filtering stats
+        console.log('=== FILTERING STATS ===');
+        console.log('Total rows:', stats.total);
+        console.log('Filtered out - No Time:', stats.noTime);
+        console.log('Filtered out - Bad Hour:', stats.badHour);
+        console.log('Filtered out - Date Range:', stats.dateFilter);
+        console.log('Filtered out - Product:', stats.productFilter);
+        console.log('Filtered out - Owner/Type:', stats.ownerFilter);
+        console.log('Passed through:', stats.passed);
+        console.log('=======================');
+
+        return result;
     }, [appendTimeData, targetData, filters, dateRange]);
 
     // DEBUG: Log processedData stats
