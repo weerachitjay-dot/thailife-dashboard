@@ -21,11 +21,17 @@ const TimeAnalysisPage = () => {
     const processedData = useMemo(() => {
         if (!Array.isArray(appendTimeData)) return [];
         return appendTimeData.map(row => {
-            if (!row.Time) return null;
+            // Handle both PascalCase (Time) and snake_case (time_of_day) from different sources
+            const rawTime = row.Time || row.time_of_day || '';
+            if (!rawTime) return null;
 
-            // Parse Time (Expected standard HH:mm:ss or HH:mm)
-            // If it's Excel serial, we might need more logic, but assuming generic CSV Time string for now.
-            const [h, m] = row.Time.split(':').map(Number);
+            // Parse Time - handle formats like "HH:mm:ss" or "HH:mm:ss - HH:mm:ss" 
+            let cleanTime = rawTime;
+            if (cleanTime.includes(' - ')) {
+                cleanTime = cleanTime.split(' - ')[0]; // Take start time only
+            }
+
+            const [h, m] = cleanTime.split(':').map(Number);
             if (isNaN(h)) return null;
 
             let timeType = 'Daily';
