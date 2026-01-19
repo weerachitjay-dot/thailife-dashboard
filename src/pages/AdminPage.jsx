@@ -4,6 +4,8 @@ import FacebookLogin from '../components/admin/FacebookLogin';
 import SyncControl from '../components/admin/SyncControl';
 import { ShieldAlert } from 'lucide-react';
 
+import DataVerificationTable from '../components/admin/DataVerificationTable';
+
 const AdminPage = () => {
     return (
         <div className="space-y-6 animate-fade-in">
@@ -32,6 +34,9 @@ const AdminPage = () => {
                     <SyncControl />
                 </div>
             </div>
+
+            {/* Debug Tools */}
+            <DataVerificationTable />
         </div>
     );
 };
