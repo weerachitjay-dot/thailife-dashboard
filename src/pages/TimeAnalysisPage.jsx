@@ -116,7 +116,7 @@ const TimeAnalysisPage = () => {
     // --- LOGIC: Validation / Comparison Data (Leads Analysis vs Time Analysis) ---
     const validationData = useMemo(() => {
         // Source of Truth: appendData (Leads Analysis Source)
-        // Actual: appendTimeData (filtered by processedData logic)
+        // Actual Raw: appendTimeData (Unfiltered, straight from DB)
 
         // 1. Group Truth Data by Day
         const truthByDay = {};
@@ -124,14 +124,14 @@ const TimeAnalysisPage = () => {
         appendData.forEach(row => {
             const d = row.Day;
             if (!d) return;
-            // Check filters to match 'processedData' scope
+            // Check filters to match data scope
             if (dateRange.start && d < dateRange.start) return;
             if (dateRange.end && d > dateRange.end) return;
 
             const normProd = normalizeProduct(row.Product);
             if (filters.product !== 'All' && normProd !== filters.product) return;
 
-            // Owner/Type filter for Truth Data (to match Time Analysis logic)
+            // Owner/Type filter via Target Data
             const targetInfo = targetData.find(t => t.Product_Target === normProd);
             if (filters.owner !== 'All' && targetInfo?.OWNER !== filters.owner) return;
             if (filters.type !== 'All' && targetInfo?.TYPE !== filters.type) return;
@@ -141,13 +141,42 @@ const TimeAnalysisPage = () => {
             truthByDay[d].leads += parseInt(row.Leads || 0);
         });
 
-        // 2. Group Actual (Processed) Data by Day
+        // 2. Group Actual RAW Data by Day
         const actualByDay = {};
-        processedData.forEach(row => {
+        const droppedByDay = {}; // Track costs with invalid time
+
+        appendTimeData.forEach(row => {
+            // Basic strict filter (Date & Product)
             const d = row.Day;
+            if (!d) return;
+            if (dateRange.start && d < dateRange.start) return;
+            if (dateRange.end && d > dateRange.end) return;
+
+            const normProd = normalizeProduct(row.Product);
+            if (filters.product !== 'All' && normProd !== filters.product) return;
+
+            // Owner/Type filter (using same target lookup)
+            const targetInfo = targetData.find(t => t.Product_Target === normProd);
+            if (filters.owner !== 'All' && targetInfo?.OWNER !== filters.owner) return;
+            if (filters.type !== 'All' && targetInfo?.TYPE !== filters.type) return;
+
             if (!actualByDay[d]) actualByDay[d] = { cost: 0, leads: 0 };
             actualByDay[d].cost += parseFloat(row.Cost || 0);
             actualByDay[d].leads += parseInt(row.Leads || 0);
+
+            // Check for Invalid Time (Dropped Logic)
+            const rawTime = row.Time || row.time_of_day || row.Time_of_Day || '';
+            let isValidTime = false;
+            if (rawTime) {
+                let cleanTime = String(rawTime).split(' - ')[0];
+                const h = parseInt(cleanTime.split(':')[0], 10);
+                if (!isNaN(h)) isValidTime = true;
+            }
+
+            if (!isValidTime) {
+                if (!droppedByDay[d]) droppedByDay[d] = { cost: 0 };
+                droppedByDay[d].cost += parseFloat(row.Cost || 0);
+            }
         });
 
         // 3. Merge & Compare
@@ -156,21 +185,27 @@ const TimeAnalysisPage = () => {
         return allDays.map(day => {
             const truth = truthByDay[day] || { cost: 0, leads: 0 };
             const actual = actualByDay[day] || { cost: 0, leads: 0 };
+            const dropped = droppedByDay[day] || { cost: 0 };
+
             const diffCost = actual.cost - truth.cost;
             const diffLeads = actual.leads - truth.leads;
+
+            // Mismatch tolerance: 1.0 currency unit
+            const isMatch = Math.abs(diffCost) < 1;
 
             return {
                 day,
                 truthCost: truth.cost,
                 actualCost: actual.cost,
+                droppedCost: dropped.cost, // New metric
                 diffCost,
                 truthLeads: truth.leads,
                 actualLeads: actual.leads,
                 diffLeads,
-                status: (Math.abs(diffCost) < 1 && Math.abs(diffLeads) === 0) ? 'MATCH' : 'MISMATCH'
+                status: isMatch ? 'MATCH' : 'MISMATCH'
             };
         });
-    }, [appendData, processedData, targetData, filters, dateRange]);
+    }, [appendData, appendTimeData, targetData, filters, dateRange]);
 
     // --- AGGREGATION: By Hour ---
     const hourlyStats = useMemo(() => {
@@ -721,7 +756,8 @@ const TimeAnalysisPage = () => {
                             <tr>
                                 <th className="px-6 py-4 text-left">Date</th>
                                 <th className="px-6 py-4 text-right bg-emerald-50/50 text-emerald-800">Meta Cost (Truth)</th>
-                                <th className="px-6 py-4 text-right bg-indigo-50/50 text-indigo-800">Time Cost (Actual)</th>
+                                <th className="px-6 py-4 text-right bg-indigo-50/50 text-indigo-800">Time Cost (Raw)</th>
+                                <th className="px-6 py-4 text-right bg-amber-50/50 text-amber-800">Dropped (No Time)</th>
                                 <th className="px-6 py-4 text-right">Cost Diff</th>
                                 <th className="px-6 py-4 text-right">Status</th>
                             </tr>
@@ -732,6 +768,9 @@ const TimeAnalysisPage = () => {
                                     <td className="px-6 py-4 font-bold text-slate-800">{row.day} ({(new Date(row.day)).toLocaleDateString('en-US', { weekday: 'short' })})</td>
                                     <td className="px-6 py-4 text-right font-medium text-slate-900 bg-emerald-50/30">฿{row.truthCost.toLocaleString()}</td>
                                     <td className="px-6 py-4 text-right font-medium text-indigo-700 bg-indigo-50/30">฿{row.actualCost.toLocaleString()}</td>
+                                    <td className="px-6 py-4 text-right font-medium text-amber-700 bg-amber-50/30">
+                                        {row.droppedCost > 0 ? `฿${row.droppedCost.toLocaleString()}` : '-'}
+                                    </td>
                                     <td className={`px-6 py-4 text-right font-bold ${row.diffCost === 0 ? 'text-slate-300' : 'text-rose-600'}`}>
                                         {row.diffCost > 0 ? '+' : ''}{Math.round(row.diffCost).toLocaleString()}
                                     </td>
@@ -746,7 +785,7 @@ const TimeAnalysisPage = () => {
                                 </tr>
                             ))}
                             {validationData.length === 0 && (
-                                <tr><td colSpan="5" className="p-8 text-center text-slate-400">No data for selected range</td></tr>
+                                <tr><td colSpan="6" className="p-8 text-center text-slate-400">No data for selected range</td></tr>
                             )}
                         </tbody>
                     </table>
