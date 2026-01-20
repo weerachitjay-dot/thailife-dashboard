@@ -9,7 +9,7 @@ import AudienceAnalysis from './components/analysis/AudienceAnalysis';
 import UserManagement from './components/auth/UserManagement';
 import LoginPage from './components/auth/LoginPage';
 import { DEFAULT_USERS } from './utils/constants';
-import OptimizationLabPage from './pages/OptimizationLabPage';
+import ConversionFunnelPage from './pages/ConversionFunnelPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import CostProfitPage from './pages/CostProfitPage';
 import ProductMasterPage from './pages/ProductMasterPage';
@@ -45,9 +45,9 @@ const AuthenticatedApp = ({ user, onLogout, users, onAddUser, onDeleteUser }) =>
         />
       )}
 
-      {activeTab === 'optimization-lab' && (
+      {activeTab === 'conversion-funnel' && (
         <ErrorBoundary>
-          <OptimizationLabPage />
+          <ConversionFunnelPage />
         </ErrorBoundary>
       )}
 
