@@ -4,7 +4,7 @@ const ConversionTable = ({ data }) => {
     // Expected Data: Array of { product, meta, sent, tl, screenRate, tlConvRate }
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mt-6">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mt-10">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50">
                 <h3 className="text-sm font-bold text-slate-800">Detailed Conversion Breakdown</h3>
             </div>
@@ -37,8 +37,8 @@ const ConversionTable = ({ data }) => {
                                     <td className="p-4 font-bold text-emerald-600">{row.tl.toLocaleString()}</td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${row.screenRate >= 75 ? 'bg-emerald-100 text-emerald-700' :
-                                                row.screenRate >= 65 ? 'bg-amber-100 text-amber-700' :
-                                                    'bg-orange-100 text-orange-700'
+                                            row.screenRate >= 65 ? 'bg-amber-100 text-amber-700' :
+                                                'bg-orange-100 text-orange-700'
                                             }`}>
                                             {row.screenRate}%
                                         </span>

@@ -46,37 +46,37 @@ const LeadFunnel = ({ data }) => {
                 />
 
                 {/* Connector 1 */}
-                <Connector dropOffRate={Math.max(0, metaToSentDrop)} label="Screening Process" />
+                <Connector dropOffRate={Math.max(0, metaToSentDrop)} label="Screening Drop-off" />
 
                 {/* Stage 2: Sent Leads */}
                 <FunnelStage
                     label="Sent Leads"
                     subLabel="Qualified"
                     count={sent}
-                    color="bg-blue-500" // Updated to match design (blue)
+                    color="bg-blue-500"
                 />
 
                 {/* Connector 2 */}
-                <Connector dropOffRate={Math.max(0, sentToTlDrop)} label="Customer Unreachable" />
+                <Connector dropOffRate={Math.max(0, sentToTlDrop)} label="Sales Drop-off" />
 
                 {/* Stage 3: TL Leads */}
                 <FunnelStage
                     label="TL Leads"
                     subLabel="Confirmed Revenue"
                     count={tl}
-                    color="bg-emerald-500" // Updated to match design (green)
+                    color="bg-emerald-500"
                 />
             </div>
 
             {/* Footer Stats */}
-            <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between px-4">
-                <div className="text-center">
-                    <p className="text-xs text-slate-400 mb-1">Meta → Sent Rate</p>
-                    <p className="text-xl font-black text-blue-600">{metaToSentRate}%</p>
+            <div className="mt-6 pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
+                <div className="text-center p-2 rounded-lg bg-blue-50/50">
+                    <p className="text-xs text-blue-600 font-bold mb-1 uppercase tracking-wider">Meta → Sent</p>
+                    <p className="text-2xl font-black text-blue-700">{metaToSentRate}%</p>
                 </div>
-                <div className="text-center">
-                    <p className="text-xs text-slate-400 mb-1">Sent → TL Rate</p>
-                    <p className="text-xl font-black text-emerald-500">{sentToTlRate}%</p>
+                <div className="text-center p-2 rounded-lg bg-emerald-50/50">
+                    <p className="text-xs text-emerald-600 font-bold mb-1 uppercase tracking-wider">Sent → TL</p>
+                    <p className="text-2xl font-black text-emerald-700">{sentToTlRate}%</p>
                 </div>
             </div>
         </div>

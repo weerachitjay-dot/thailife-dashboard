@@ -53,7 +53,7 @@ const DropoffChart = ({ data }) => {
                         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                             <XAxis type="category" dataKey="product" hide={true} />
-                            <YAxis type="number" dataKey="screenRate" unit="%" domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                            <YAxis type="number" dataKey="screenRate" unit="%" domain={[0, 'auto']} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                             <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
                             <ReferenceLine y={65} stroke="#f97316" strokeDasharray="3 3" strokeOpacity={0.5} label={{ value: 'Risk Line', position: 'right', fontSize: 10, fill: '#f97316' }} />
                             <Scatter name="Products" data={processedData} fill="#8884d8">
@@ -67,11 +67,12 @@ const DropoffChart = ({ data }) => {
             )}
 
             {/* Legend */}
-            <div className="mt-4 flex justify-center gap-6 text-[10px] text-slate-500 font-medium">
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div> ≥75% Good</div>
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div> 65-75% Watch</div>
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div> &lt;65% Risk</div>
+            <div className="mt-4 flex flex-wrap justify-center gap-4 text-xs text-slate-600 font-medium bg-slate-50/50 p-2 rounded-lg">
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm"></div> ≥75% Good</div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-amber-500 shadow-sm"></div> 65-75% Watch</div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-orange-500 shadow-sm"></div> &lt;65% Risk</div>
             </div>
+
         </div>
     );
 };
