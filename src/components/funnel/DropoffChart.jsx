@@ -9,7 +9,7 @@ const CustomTooltip = ({ active, payload }) => {
             <div className="bg-white p-3 border border-slate-100 shadow-xl rounded-lg text-xs z-50">
                 <p className="font-bold text-slate-800 mb-1">{data.product}</p>
                 <div className="space-y-1">
-                    <p className="text-slate-500">Screen Rate: <span className={`font-bold ${data.color.replace('bg-', 'text-')}`}>{data.screenRate}%</span></p>
+                    <p className="text-slate-500">Screen Rate: <span className="font-bold" style={{ color: data.fill }}>{data.screenRate}%</span></p>
                     <p className="text-slate-500">Meta Leads: {data.meta}</p>
                     <p className="text-slate-500">Sent Leads: {data.sent}</p>
                 </div>

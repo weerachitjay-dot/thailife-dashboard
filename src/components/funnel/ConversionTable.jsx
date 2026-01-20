@@ -4,7 +4,7 @@ const ConversionTable = ({ data }) => {
     // Expected Data: Array of { product, meta, sent, tl, screenRate, tlConvRate }
 
     return (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mt-10">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden mt-16">
             <div className="p-4 border-b border-slate-100 bg-slate-50/50">
                 <h3 className="text-sm font-bold text-slate-800">Detailed Conversion Breakdown</h3>
             </div>
