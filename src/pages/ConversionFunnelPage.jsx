@@ -119,7 +119,7 @@ const ConversionFunnelPage = () => {
                         <DateRangePicker
                             startDate={dateRange.start}
                             endDate={dateRange.end}
-                            onChange={(s, e) => setDateRange({ start: s, end: e })}
+                            onChange={(newRange) => setDateRange(prev => ({ ...prev, ...newRange }))}
                         />
                     </div>
                 </div>
