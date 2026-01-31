@@ -41,6 +41,15 @@ const PerformanceControlPage = () => {
         }, {});
     }, [targetData]);
 
+    // Helper: Calculate Days in Range
+    const daysInterval = useMemo(() => {
+        const start = new Date(dateRange.start);
+        const end = new Date(dateRange.end);
+        const diffTime = Math.abs(end - start);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return Math.max(1, diffDays + 1); // Inclusive
+    }, [dateRange]);
+
     // 3. Aggregate Data for Chart
     const chartData = useMemo(() => {
         // Helpers
@@ -56,24 +65,22 @@ const PerformanceControlPage = () => {
                     groupedByDate[row.Day] = {
                         day: row.Day,
                         actual: 0,
-                        // targetAccumulator for "All" view depends on which products are active/present?
-                        // Simple Logic: If "All", Target = Sum of All Configured Targets (Fixed Goal)
-                        // Or Sum of Targets of products present in data?
-                        // User prompt "Target 100". Usually implies Fixed Goal.
-                        // I will use Sum of Matching Targets.
                     };
                 }
                 groupedByDate[row.Day].actual += (row.Leads_Sent || 0);
             }
         });
 
-        // Calculate Target Value (Static)
-        let staticTarget = 0;
+        // Calculate Target Value (Dynamic Daily Average)
+        let totalPeriodTarget = 0;
         if (productFilter === 'All') {
-            staticTarget = Object.values(targetsMap).reduce((a, b) => a + b, 0);
+            totalPeriodTarget = Object.values(targetsMap).reduce((a, b) => a + b, 0);
         } else {
-            staticTarget = targetsMap[productFilter] || 0;
+            totalPeriodTarget = targetsMap[productFilter] || 0;
         }
+
+        // Daily Target = Total Target / Days in View
+        const dailyTarget = totalPeriodTarget / daysInterval;
 
         // Convert key-value to array
         let dailyData = Object.values(groupedByDate).sort((a, b) => a.day.localeCompare(b.day));
@@ -81,9 +88,9 @@ const PerformanceControlPage = () => {
         // Fill Data
         dailyData = dailyData.map(d => ({
             ...d,
-            target: staticTarget,
-            lower: staticTarget * 0.9,
-            upper: staticTarget * 1.1
+            target: Math.round(dailyTarget), // Visually round for cleaner chart
+            lower: dailyTarget * 0.9,
+            upper: dailyTarget * 1.1
         }));
 
         // Handle Weekly View
@@ -109,14 +116,12 @@ const PerformanceControlPage = () => {
             });
 
             return Object.values(weeklyMap).sort((a, b) => a.day.localeCompare(b.day)).map(w => {
-                // Weekly Target = Daily Target * 7 (Standard)
-                // Or Daily Target * DaysPresent? 
-                // Control Logic usually assumes Full Week Capacity.
-                const weeklyTarget = staticTarget * 7;
+                // Weekly Target = Daily Target * 7
+                const weeklyTarget = dailyTarget * 7;
                 return {
                     day: `Week of ${w.day}`,
                     actual: w.actual,
-                    target: weeklyTarget,
+                    target: Math.round(weeklyTarget),
                     lower: weeklyTarget * 0.9,
                     upper: weeklyTarget * 1.1,
                     range: [weeklyTarget * 0.9, weeklyTarget * 1.1]
@@ -130,7 +135,7 @@ const PerformanceControlPage = () => {
             range: [d.lower, d.upper]
         }));
 
-    }, [processedSentData, targetsMap, dateRange, productFilter, viewMode]);
+    }, [processedSentData, targetsMap, dateRange, productFilter, viewMode, daysInterval]);
 
 
     // 4. Status Table Data (Always Daily, Last 2 Days, Per Product)
@@ -141,7 +146,8 @@ const PerformanceControlPage = () => {
             : [productFilter];
 
         return productsToShow.map(prod => {
-            const target = targetsMap[prod] || 0;
+            const totalTarget = targetsMap[prod] || 0;
+            const dailyTarget = totalTarget / daysInterval; // Derived Daily Target
 
             // Get all records for this product
             const records = (processedSentData || [])
@@ -156,28 +162,26 @@ const PerformanceControlPage = () => {
 
             // Rule: < -10% consecutive >= 2 days
             if (last2.length === 2) {
-                const day0Low = last2[0].Leads_Sent < target * 0.9;
-                const day1Low = last2[1].Leads_Sent < target * 0.9;
+                const day0Low = last2[0].Leads_Sent < dailyTarget * 0.9;
+                const day1Low = last2[1].Leads_Sent < dailyTarget * 0.9;
 
                 if (day0Low && day1Low) {
                     status = 'Critical';
-                } else if (last2[0].Leads_Sent > target * 1.1) {
+                } else if (last2[0].Leads_Sent > dailyTarget * 1.1) {
                     status = 'Warning'; // Check sustainability
                 }
             } else if (last2.length === 1) {
                 // Only 1 day data
-                if (last2[0].Leads_Sent < target * 0.9) {
-                    // Can't confirm consecutive, but maybe alert?
-                    // Strict rule says ">= 2 days". So Normal or just "Watch".
-                    // Let's keep Normal unless 2 days.
-                } else if (last2[0].Leads_Sent > target * 1.1) {
+                if (last2[0].Leads_Sent < dailyTarget * 0.9) {
+                    // Normal
+                } else if (last2[0].Leads_Sent > dailyTarget * 1.1) {
                     status = 'Warning';
                 }
             }
 
             return {
                 product: prod,
-                target,
+                target: Math.round(dailyTarget), // Show Daily Target
                 last2Days: last2.map(r => ({ date: r.Day, leads: r.Leads_Sent })),
                 status
             };
@@ -187,7 +191,7 @@ const PerformanceControlPage = () => {
             return rank[a.status] - rank[b.status];
         }).filter(r => r.target > 0); // Only show products with targets
 
-    }, [processedSentData, targetsMap, productFilter, dateRange.end]); // Dependent on End Date for Time Travel
+    }, [processedSentData, targetsMap, productFilter, dateRange.end, daysInterval]); // Dependent on End Date for Time Travel
     // If DateRange is past, "Current Status" calculation might be weird. 
     // But usually Status Reference implies "Current Health". 
     // I'll assume it scans the ENTIRE dataset to find the absolute latest dates, ignoring the Date Filter.
@@ -199,7 +203,19 @@ const PerformanceControlPage = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-slate-800">Performance Control</h2>
-                    <p className="text-slate-500 text-sm">Monitor Lead/Sent Targets and Control Bounds.</p>
+                    <p className="text-slate-500 text-sm">
+                        Total Target (Round): <span className="font-bold text-indigo-600">
+                            {productFilter === 'All'
+                                ? Object.values(targetsMap).reduce((a, b) => a + b, 0).toLocaleString()
+                                : (targetsMap[productFilter] || 0).toLocaleString()}
+                        </span>
+                        {' '}/ {daysInterval} days
+                        = Daily Avg: <span className="font-bold text-emerald-600">
+                            {Math.round((productFilter === 'All'
+                                ? Object.values(targetsMap).reduce((a, b) => a + b, 0)
+                                : (targetsMap[productFilter] || 0)) / daysInterval).toLocaleString()}
+                        </span>
+                    </p>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
