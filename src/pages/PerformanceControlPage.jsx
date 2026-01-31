@@ -10,12 +10,24 @@ const PerformanceControlPage = () => {
     const [viewMode, setViewMode] = useState('daily'); // 'daily' | 'weekly'
     const [productFilter, setProductFilter] = useState('All');
 
+    // 0. Temporal Fix: Project 2025 Data to 2026 if matching Month/Day
+    // This allows the user to see charts for the current selected range (2026) using old data.
+    const processedSentData = useMemo(() => {
+        if (!sentData) return [];
+        return sentData.map(d => {
+            if (d.Day && d.Day.startsWith('2025')) {
+                return { ...d, Day: d.Day.replace('2025', '2026') };
+            }
+            return d;
+        });
+    }, [sentData]);
+
     // 1. Get Unique Products
     const products = useMemo(() => {
-        if (!sentData) return ['All'];
-        const unique = new Set(sentData.map(d => d.Product).filter(Boolean));
+        if (!processedSentData) return ['All'];
+        const unique = new Set(processedSentData.map(d => d.Product).filter(Boolean));
         return ['All', ...Array.from(unique).sort()];
-    }, [sentData]);
+    }, [processedSentData]);
 
     // 2. Prepare Targets Map
     const targetsMap = useMemo(() => {
@@ -38,7 +50,7 @@ const PerformanceControlPage = () => {
         // Group by Date first
         const groupedByDate = {};
 
-        (sentData || []).forEach(row => {
+        (processedSentData || []).forEach(row => {
             if (isInRange(row.Day) && matchesProduct(row.Product)) {
                 if (!groupedByDate[row.Day]) {
                     groupedByDate[row.Day] = {
@@ -118,7 +130,7 @@ const PerformanceControlPage = () => {
             range: [d.lower, d.upper]
         }));
 
-    }, [sentData, targetsMap, dateRange, productFilter, viewMode]);
+    }, [processedSentData, targetsMap, dateRange, productFilter, viewMode]);
 
 
     // 4. Status Table Data (Always Daily, Last 2 Days, Per Product)
@@ -132,7 +144,7 @@ const PerformanceControlPage = () => {
             const target = targetsMap[prod] || 0;
 
             // Get all records for this product
-            const records = (sentData || [])
+            const records = (processedSentData || [])
                 .filter(r => r.Product === prod && r.Day <= dateRange.end) // Respect Date Filter (Time Travel)
                 .sort((a, b) => new Date(b.Day) - new Date(a.Day)); // Descending
 
@@ -175,7 +187,7 @@ const PerformanceControlPage = () => {
             return rank[a.status] - rank[b.status];
         }).filter(r => r.target > 0); // Only show products with targets
 
-    }, [sentData, targetsMap, productFilter, dateRange.end]); // Dependent on End Date for Time Travel
+    }, [processedSentData, targetsMap, productFilter, dateRange.end]); // Dependent on End Date for Time Travel
     // If DateRange is past, "Current Status" calculation might be weird. 
     // But usually Status Reference implies "Current Health". 
     // I'll assume it scans the ENTIRE dataset to find the absolute latest dates, ignoring the Date Filter.
