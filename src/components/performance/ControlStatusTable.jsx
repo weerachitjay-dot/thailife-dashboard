@@ -38,7 +38,7 @@ const ControlStatusTable = ({ data }) => {
                                     <td className="p-4">
                                         {row.last2Days[1] ? (
                                             <div className="flex flex-col items-center">
-                                                <span className="text-[10px] text-slate-400 mb-1">{row.last2Days[1].date.substring(5)}</span>
+                                                <span className="text-[10px] text-slate-400 mb-1">{new Date(row.last2Days[1].date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
                                                 <span className={
                                                     row.last2Days[1].leads < row.target * 0.9 ? 'text-red-500 font-bold' :
                                                         row.last2Days[1].leads > row.target * 1.1 ? 'text-amber-500 font-bold' :
@@ -52,7 +52,7 @@ const ControlStatusTable = ({ data }) => {
                                     <td className="p-4">
                                         {row.last2Days[0] ? (
                                             <div className="flex flex-col items-center">
-                                                <span className="text-[10px] text-slate-400 mb-1">{row.last2Days[0].date.substring(5)}</span>
+                                                <span className="text-[10px] text-slate-400 mb-1">{new Date(row.last2Days[0].date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}</span>
                                                 <span className={
                                                     row.last2Days[0].leads < row.target * 0.9 ? 'text-red-500 font-bold' :
                                                         row.last2Days[0].leads > row.target * 1.1 ? 'text-amber-500 font-bold' :

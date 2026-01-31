@@ -1,5 +1,6 @@
 import React from 'react';
 import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { BarChart2 } from 'lucide-react';
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -58,54 +59,61 @@ const PerformanceChart = ({ data, viewMode }) => {
             </div>
 
             <div className="flex-1 w-full min-h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis
-                            dataKey="day"
-                            tick={{ fontSize: 10, fill: '#64748b' }}
-                            axisLine={false}
-                            tickLine={false}
-                            minTickGap={30}
-                        />
-                        <YAxis
-                            tick={{ fontSize: 10, fill: '#64748b' }}
-                            axisLine={false}
-                            tickLine={false}
-                        />
-                        <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+                {data.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center text-slate-300">
+                        <BarChart2 className="w-12 h-12 mb-2 opacity-20" />
+                        <p>No performance data in selected range</p>
+                    </div>
+                ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={data} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis
+                                dataKey="day"
+                                tick={{ fontSize: 10, fill: '#64748b' }}
+                                axisLine={false}
+                                tickLine={false}
+                                minTickGap={30}
+                            />
+                            <YAxis
+                                tick={{ fontSize: 10, fill: '#64748b' }}
+                                axisLine={false}
+                                tickLine={false}
+                            />
+                            <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
 
-                        {/* Control Band (Area) */}
-                        <Area
-                            type="monotone"
-                            dataKey="range"
-                            fill="#dcfce7"
-                            stroke="none"
-                            fillOpacity={0.6}
-                        />
+                            {/* Control Band (Area) */}
+                            <Area
+                                type="monotone"
+                                dataKey="range"
+                                fill="#dcfce7"
+                                stroke="none"
+                                fillOpacity={0.6}
+                            />
 
-                        {/* Target Line */}
-                        <Line
-                            type="monotone"
-                            dataKey="target"
-                            stroke="#10b981"
-                            strokeWidth={2}
-                            strokeDasharray="5 5"
-                            dot={false}
-                            activeDot={false}
-                        />
+                            {/* Target Line */}
+                            <Line
+                                type="monotone"
+                                dataKey="target"
+                                stroke="#10b981"
+                                strokeWidth={2}
+                                strokeDasharray="5 5"
+                                dot={false}
+                                activeDot={false}
+                            />
 
-                        {/* Actual Line */}
-                        <Line
-                            type="monotone"
-                            dataKey="actual"
-                            stroke="#3b82f6"
-                            strokeWidth={3}
-                            dot={{ r: 3, strokeWidth: 0, fill: '#3b82f6' }}
-                            activeDot={{ r: 6, strokeWidth: 0 }}
-                        />
-                    </ComposedChart>
-                </ResponsiveContainer>
+                            {/* Actual Line */}
+                            <Line
+                                type="monotone"
+                                dataKey="actual"
+                                stroke="#3b82f6"
+                                strokeWidth={3}
+                                dot={{ r: 3, strokeWidth: 0, fill: '#3b82f6' }}
+                                activeDot={{ r: 6, strokeWidth: 0 }}
+                            />
+                        </ComposedChart>
+                    </ResponsiveContainer>
+                )}
             </div>
         </div>
     );
