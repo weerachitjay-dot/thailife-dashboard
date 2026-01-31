@@ -175,7 +175,7 @@ const PerformanceControlPage = () => {
             return rank[a.status] - rank[b.status];
         }).filter(r => r.target > 0); // Only show products with targets
 
-    }, [sentData, targetsMap, productFilter]); // Independent of DateRange? Or constrained? Usually Status is "Current". 
+    }, [sentData, targetsMap, productFilter, dateRange.end]); // Dependent on End Date for Time Travel
     // If DateRange is past, "Current Status" calculation might be weird. 
     // But usually Status Reference implies "Current Health". 
     // I'll assume it scans the ENTIRE dataset to find the absolute latest dates, ignoring the Date Filter.
