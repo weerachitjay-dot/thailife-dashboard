@@ -133,7 +133,7 @@ const PerformanceControlPage = () => {
 
             // Get all records for this product
             const records = (sentData || [])
-                .filter(r => r.Product === prod)
+                .filter(r => r.Product === prod && r.Day <= dateRange.end) // Respect Date Filter (Time Travel)
                 .sort((a, b) => new Date(b.Day) - new Date(a.Day)); // Descending
 
             // Get last 2 available

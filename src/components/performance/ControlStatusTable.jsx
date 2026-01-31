@@ -17,8 +17,8 @@ const ControlStatusTable = ({ data }) => {
                         <tr>
                             <th className="p-4 text-left">Product</th>
                             <th className="p-4 text-slate-600">Daily Target</th>
-                            <th className="p-4 text-blue-500">Yesterday</th>
-                            <th className="p-4 text-blue-600">Today (Latest)</th>
+                            <th className="p-4 text-blue-500">Day N-1</th>
+                            <th className="p-4 text-blue-600">Day N (Latest)</th>
                             <th className="p-4 text-left">Status</th>
                             <th className="p-4 text-right">Action Required</th>
                         </tr>
@@ -37,24 +37,30 @@ const ControlStatusTable = ({ data }) => {
                                     <td className="p-4 font-medium">{row.target}</td>
                                     <td className="p-4">
                                         {row.last2Days[1] ? (
-                                            <span className={
-                                                row.last2Days[1].leads < row.target * 0.9 ? 'text-red-500 font-bold' :
-                                                    row.last2Days[1].leads > row.target * 1.1 ? 'text-amber-500 font-bold' :
-                                                        'text-slate-600'
-                                            }>
-                                                {row.last2Days[1].leads}
-                                            </span>
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-[10px] text-slate-400 mb-1">{row.last2Days[1].date.substring(5)}</span>
+                                                <span className={
+                                                    row.last2Days[1].leads < row.target * 0.9 ? 'text-red-500 font-bold' :
+                                                        row.last2Days[1].leads > row.target * 1.1 ? 'text-amber-500 font-bold' :
+                                                            'text-slate-600'
+                                                }>
+                                                    {row.last2Days[1].leads}
+                                                </span>
+                                            </div>
                                         ) : '-'}
                                     </td>
                                     <td className="p-4">
                                         {row.last2Days[0] ? (
-                                            <span className={
-                                                row.last2Days[0].leads < row.target * 0.9 ? 'text-red-500 font-bold' :
-                                                    row.last2Days[0].leads > row.target * 1.1 ? 'text-amber-500 font-bold' :
-                                                        'text-slate-600'
-                                            }>
-                                                {row.last2Days[0].leads}
-                                            </span>
+                                            <div className="flex flex-col items-center">
+                                                <span className="text-[10px] text-slate-400 mb-1">{row.last2Days[0].date.substring(5)}</span>
+                                                <span className={
+                                                    row.last2Days[0].leads < row.target * 0.9 ? 'text-red-500 font-bold' :
+                                                        row.last2Days[0].leads > row.target * 1.1 ? 'text-amber-500 font-bold' :
+                                                            'text-slate-600'
+                                                }>
+                                                    {row.last2Days[0].leads}
+                                                </span>
+                                            </div>
                                         ) : '-'}
                                     </td>
                                     <td className="p-4 text-left">
