@@ -233,6 +233,14 @@ const PerformanceControlPage = () => {
             {/* Status Table */}
             <ControlStatusTable data={statusData} />
 
+            {/* Debug Info (Temporary) */}
+            <div className="bg-slate-100 p-2 rounded text-[10px] font-mono mb-4 text-slate-500 overflow-x-auto">
+                <p>Date Range: {JSON.stringify(dateRange)}</p>
+                <p>First Row Sample: {JSON.stringify(sentData?.[0])}</p>
+                <p>Total Rows: {sentData?.length}</p>
+                <p>Chart Data Length: {chartData?.length}</p>
+            </div>
+
             {/* Main Chart */}
             <PerformanceChart data={chartData} viewMode={viewMode} />
 
