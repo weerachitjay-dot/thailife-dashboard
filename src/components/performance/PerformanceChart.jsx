@@ -58,7 +58,7 @@ const PerformanceChart = ({ data, viewMode }) => {
                 </div>
             </div>
 
-            <div className="flex-1 w-full min-h-[350px]">
+            <div className="w-full h-[400px]">
                 {data.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-slate-300">
                         <BarChart2 className="w-12 h-12 mb-2 opacity-20" />
