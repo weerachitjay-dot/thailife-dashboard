@@ -129,7 +129,24 @@ const MonitorTargetPage = () => {
 
         const totalWeekTarget = paceData.reduce((sum, p) => sum + p.weekTarget, 0);
         const totalWeekActual = paceData.reduce((sum, p) => sum + p.weekActual, 0);
-        const weekPercentage = totalWeekTarget > 0 ? (totalWeekActual / totalWeekTarget) * 100 : 0;
+
+        // Weekly estimation logic
+        const weekTargetFull = totalDailyTarget * 7; // Full week target
+        let estimatedWeekTotal = totalWeekActual;
+        let weekPercentage = 0;
+        let isWeekEstimated = false;
+
+        if (daysInWeek < 7) {
+            // Incomplete week - estimate based on daily average
+            const averagePerDay = daysInWeek > 0 ? totalWeekActual / daysInWeek : 0;
+            estimatedWeekTotal = averagePerDay * 7;
+            weekPercentage = weekTargetFull > 0 ? (estimatedWeekTotal / weekTargetFull) * 100 : 0;
+            isWeekEstimated = true;
+        } else {
+            // Complete week - use actual
+            weekPercentage = weekTargetFull > 0 ? (totalWeekActual / weekTargetFull) * 100 : 0;
+            isWeekEstimated = false;
+        }
 
         const totalPeriodTarget = paceData.reduce((sum, p) => sum + p.periodTarget, 0);
         const totalPeriodActual = paceData.reduce((sum, p) => sum + p.periodActual, 0);
@@ -142,10 +159,11 @@ const MonitorTargetPage = () => {
             maintain, push, stop, total: paceData.length,
             totalDailyTarget, totalDailyActual, dailyPercentage,
             totalWeekTarget, totalWeekActual, weekPercentage,
+            weekTargetFull, estimatedWeekTotal, isWeekEstimated,
             totalPeriodTarget, totalPeriodActual, periodPercentage,
             targetSoFar
         };
-    }, [paceData]);
+    }, [paceData, daysInWeek, daysPassedInPeriod]);
 
     return (
         <div className="space-y-6 animate-fade-in-up pb-20">
@@ -224,7 +242,9 @@ const MonitorTargetPage = () => {
                         : 'bg-rose-50 border-rose-200'
                     }`}>
                     <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-medium text-slate-500">สัปดาห์นี้ (Week) <span className="text-xs">Est.</span></h3>
+                        <h3 className="text-sm font-medium text-slate-500">
+                            สัปดาห์นี้ (Week) <span className="text-xs">{summary.isWeekEstimated ? 'Est.' : ''}</span>
+                        </h3>
                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${summary.weekPercentage >= 90 && summary.weekPercentage <= 110
                             ? 'bg-emerald-100 text-emerald-700'
                             : summary.weekPercentage < 90
@@ -238,10 +258,16 @@ const MonitorTargetPage = () => {
                         {summary.weekPercentage.toFixed(0)}%
                     </div>
                     <div className="text-sm text-slate-600 font-mono">
-                        {summary.totalWeekActual.toLocaleString()} / {Math.round(summary.totalWeekTarget).toLocaleString()}
+                        {summary.isWeekEstimated
+                            ? `${Math.round(summary.estimatedWeekTotal).toLocaleString()} / ${Math.round(summary.weekTargetFull).toLocaleString()}`
+                            : `${summary.totalWeekActual.toLocaleString()} / ${Math.round(summary.weekTargetFull).toLocaleString()}`
+                        }
                     </div>
                     <p className="text-xs text-slate-500 mt-2">
-                        อ้างอิงตัวหารจาก {daysInWeek} วัน
+                        {summary.isWeekEstimated
+                            ? `Estimate จากจริงสะสม ${daysInWeek} วัน`
+                            : `สัปดาห์นี้ผ่านครบแล้ว`
+                        }
                     </p>
                 </div>
 
