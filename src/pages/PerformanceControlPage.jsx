@@ -138,7 +138,7 @@ const PerformanceControlPage = () => {
     }, [processedSentData, targetsMap, dateRange, productFilter, viewMode, daysInterval]);
 
 
-    // 4. Status Table Data (Always Daily, Last 2 Days, Per Product)
+    // 4. Status Table Data
     const statusData = useMemo(() => {
         // Get list of products to show (filtered or all)
         const productsToShow = productFilter === 'All'
@@ -151,51 +151,88 @@ const PerformanceControlPage = () => {
 
             // Get all records for this product
             const records = (processedSentData || [])
-                .filter(r => r.Product === prod && r.Day <= dateRange.end) // Respect Date Filter (Time Travel)
+                .filter(r => r.Product === prod)
                 .sort((a, b) => new Date(b.Day) - new Date(a.Day)); // Descending
 
-            // Get last 2 available
-            const last2 = records.slice(0, 2); // [Today, Yesterday]
+            if (viewMode === 'weekly') {
+                // Weekly Logic
+                const weeklyTarget = dailyTarget * 7;
 
-            // Determine Status
-            let status = 'Normal';
+                // Group by Week
+                const weeklyMap = {};
+                records.forEach(r => {
+                    const date = new Date(r.Day);
+                    const firstDay = new Date(date);
+                    firstDay.setDate(date.getDate() - date.getDay() + 1); // Monday
+                    const weekStr = firstDay.toISOString().split('T')[0];
 
-            // Rule: < -10% consecutive >= 2 days
-            if (last2.length === 2) {
-                const day0Low = last2[0].Leads_Sent < dailyTarget * 0.9;
-                const day1Low = last2[1].Leads_Sent < dailyTarget * 0.9;
+                    if (!weeklyMap[weekStr]) weeklyMap[weekStr] = 0;
+                    weeklyMap[weekStr] += r.Leads_Sent;
+                });
 
-                if (day0Low && day1Low) {
-                    status = 'Critical';
-                } else if (last2[0].Leads_Sent > dailyTarget * 1.1) {
-                    status = 'Warning'; // Check sustainability
+                // Get sorted weeks (Latest first)
+                const sortedWeeks = Object.keys(weeklyMap).sort().reverse();
+
+                // [This Week, Last Week]
+                // Note: "This Week" might be partial.
+                const thisWeekDate = sortedWeeks[0];
+                const lastWeekDate = sortedWeeks[1];
+
+                const thisWeekLeads = weeklyMap[thisWeekDate] || 0;
+                const lastWeekLeads = weeklyMap[lastWeekDate] || 0;
+
+                return {
+                    product: prod,
+                    target: Math.round(weeklyTarget),
+                    viewMode: 'weekly',
+                    dataPoints: [
+                        { label: 'Last Week', date: lastWeekDate, leads: lastWeekLeads }, // Index 1 equivalent
+                        { label: 'This Week', date: thisWeekDate, leads: thisWeekLeads }  // Index 0 equivalent
+                    ],
+                    status: thisWeekLeads < weeklyTarget * 0.9 ? 'Critical' : // Just a rough proxy
+                        thisWeekLeads > weeklyTarget * 1.1 ? 'Warning' : 'Normal'
+                };
+
+            } else {
+                // Daily Logic
+                // Filter to respect Date Range for "Control" (or should it be latest available?)
+                // The prompt implies "Control" is real-time monitoring.
+                // But usually dashboards respect the date picker.
+                // However, "Day N" usually implies "Today" or "Latest Data".
+                // I will use `records` which I haven't filtered by dateRange.end inside this map yet.
+                // Wait, previous code DID filter by dateRange.end. Let's respect that.
+
+                const validRecords = records.filter(r => r.Day <= dateRange.end);
+                const last2 = validRecords.slice(0, 2); // [Today, Yesterday]
+
+                let status = 'Normal';
+                if (last2.length === 2) {
+                    const day0Low = last2[0].Leads_Sent < dailyTarget * 0.9;
+                    const day1Low = last2[1].Leads_Sent < dailyTarget * 0.9;
+
+                    if (day0Low && day1Low) status = 'Critical';
+                    else if (last2[0].Leads_Sent > dailyTarget * 1.1) status = 'Warning';
+                } else if (last2.length === 1) {
+                    if (last2[0].Leads_Sent > dailyTarget * 1.1) status = 'Warning';
                 }
-            } else if (last2.length === 1) {
-                // Only 1 day data
-                if (last2[0].Leads_Sent < dailyTarget * 0.9) {
-                    // Normal
-                } else if (last2[0].Leads_Sent > dailyTarget * 1.1) {
-                    status = 'Warning';
-                }
+
+                return {
+                    product: prod,
+                    target: Math.round(dailyTarget),
+                    viewMode: 'daily',
+                    dataPoints: [
+                        { ...last2[1], label: 'Day N-1' },
+                        { ...last2[0], label: 'Day N (Latest)' }
+                    ],
+                    status
+                };
             }
-
-            return {
-                product: prod,
-                target: Math.round(dailyTarget), // Show Daily Target
-                last2Days: last2.map(r => ({ date: r.Day, leads: r.Leads_Sent })),
-                status
-            };
         }).sort((a, b) => {
-            // Sort Critical first
             const rank = { 'Critical': 0, 'Warning': 1, 'Normal': 2 };
             return rank[a.status] - rank[b.status];
-        }).filter(r => r.target > 0); // Only show products with targets
+        }).filter(r => r.target > 0);
 
-    }, [processedSentData, targetsMap, productFilter, dateRange.end, daysInterval]); // Dependent on End Date for Time Travel
-    // If DateRange is past, "Current Status" calculation might be weird. 
-    // But usually Status Reference implies "Current Health". 
-    // I'll assume it scans the ENTIRE dataset to find the absolute latest dates, ignoring the Date Filter.
-    // This is safer for "Control" which is always "Now".
+    }, [processedSentData, targetsMap, productFilter, dateRange.end, daysInterval, viewMode]);
 
     return (
         <div className="space-y-6 animate-fade-in-up pb-10">
@@ -259,7 +296,7 @@ const PerformanceControlPage = () => {
             </div>
 
             {/* Status Table */}
-            <ControlStatusTable data={statusData} />
+            <ControlStatusTable data={statusData} viewMode={viewMode} />
 
             {/* Main Chart */}
             <PerformanceChart data={chartData} viewMode={viewMode} />

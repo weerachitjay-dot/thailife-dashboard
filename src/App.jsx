@@ -16,6 +16,7 @@ import ProductMasterPage from './pages/ProductMasterPage';
 import LeadsAnalysisPage from './pages/LeadsAnalysisPage';
 import AdminPage from './pages/AdminPage'; // NEW
 import PerformanceControlPage from './pages/PerformanceControlPage';
+import DailyTargetMonitorPage from './pages/DailyTargetMonitorPage';
 import './App.css';
 
 // --- Authenticated App Content ---
@@ -55,6 +56,12 @@ const AuthenticatedApp = ({ user, onLogout, users, onAddUser, onDeleteUser }) =>
       {activeTab === 'data-control' && (
         <ErrorBoundary>
           <PerformanceControlPage />
+        </ErrorBoundary>
+      )}
+
+      {activeTab === 'monitor' && (
+        <ErrorBoundary>
+          <DailyTargetMonitorPage />
         </ErrorBoundary>
       )}
 

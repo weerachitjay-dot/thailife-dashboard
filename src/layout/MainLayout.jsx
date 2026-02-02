@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Activity, FileSpreadsheet, LogOut, Filter, Calendar, LayoutDashboard, Database, BarChart2, PieChart, Users, Settings, Table, Clock, FlaskConical, Layers, RefreshCcw, Gauge } from 'lucide-react';
+import { Activity, FileSpreadsheet, LogOut, Filter, Calendar, LayoutDashboard, Database, BarChart2, PieChart, Users, Settings, Table, Clock, FlaskConical, Layers, RefreshCcw, Gauge, Target } from 'lucide-react';
 import { useData } from '../context/DataContext';
 import DateRangePicker from '../components/common/DateRangePicker';
 import LoadingBar from '../components/common/LoadingBar';
@@ -25,6 +25,7 @@ const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
         { id: 'smart-analysis', label: 'Creative Analysis', icon: BarChart2 },
         { id: 'smart-audience', label: 'Smart Audience', icon: PieChart },
         { id: 'conversion-funnel', label: 'Conversion Funnel', icon: FlaskConical }, // NEW
+        { id: 'monitor', label: 'Target Monitor', icon: Target }, // NEW: Request
         { id: 'data-control', label: 'Performance Control', icon: Gauge },
         { id: 'intelligence', label: 'Intelligence Hub', icon: Database }, // Renamed from Raw Data
         { id: 'time-analysis', label: 'Time Analysis', icon: Clock },
