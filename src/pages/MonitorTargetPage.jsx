@@ -34,6 +34,14 @@ const MonitorTargetPage = () => {
         return differenceInDays(periodEnd, periodStart) + 1;
     }, [periodStart, periodEnd]);
 
+    // Calculate days passed from period start to today (selectedDate)
+    const daysPassedInPeriod = useMemo(() => {
+        const today = new Date();
+        const daysPassed = differenceInDays(today, periodStart) + 1;
+        // Clamp to period bounds
+        return Math.max(1, Math.min(daysPassed, daysInPeriod));
+    }, [periodStart, daysInPeriod]);
+
     // Main data calculation
     const paceData = useMemo(() => {
         if (!sentData || !targetData) return [];
@@ -127,11 +135,15 @@ const MonitorTargetPage = () => {
         const totalPeriodActual = paceData.reduce((sum, p) => sum + p.periodActual, 0);
         const periodPercentage = totalPeriodTarget > 0 ? (totalPeriodActual / totalPeriodTarget) * 100 : 0;
 
+        // Target for days passed so far
+        const targetSoFar = totalDailyTarget * daysPassedInPeriod;
+
         return {
             maintain, push, stop, total: paceData.length,
             totalDailyTarget, totalDailyActual, dailyPercentage,
             totalWeekTarget, totalWeekActual, weekPercentage,
-            totalPeriodTarget, totalPeriodActual, periodPercentage
+            totalPeriodTarget, totalPeriodActual, periodPercentage,
+            targetSoFar
         };
     }, [paceData]);
 
@@ -178,18 +190,18 @@ const MonitorTargetPage = () => {
             {/* 3 Period KPI Cards */}
             <div className="grid gap-4 md:grid-cols-3">
                 <div className={`rounded-xl border-2 p-6 shadow-sm ${summary.dailyPercentage >= 90 && summary.dailyPercentage <= 110
-                        ? 'bg-emerald-50 border-emerald-200'
-                        : summary.dailyPercentage < 90
-                            ? 'bg-amber-50 border-amber-200'
-                            : 'bg-rose-50 border-rose-200'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : summary.dailyPercentage < 90
+                        ? 'bg-amber-50 border-amber-200'
+                        : 'bg-rose-50 border-rose-200'
                     }`}>
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-medium text-slate-500">วันนี้ (Day)</h3>
                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${summary.dailyPercentage >= 90 && summary.dailyPercentage <= 110
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : summary.dailyPercentage < 90
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-rose-100 text-rose-700'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : summary.dailyPercentage < 90
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-rose-100 text-rose-700'
                             }`}>
                             {summary.dailyPercentage >= 90 && summary.dailyPercentage <= 110 ? 'ปกติ' : summary.dailyPercentage < 90 ? 'ต้องเร่ง' : 'ชะลอ'}
                         </span>
@@ -206,18 +218,18 @@ const MonitorTargetPage = () => {
                 </div>
 
                 <div className={`rounded-xl border-2 p-6 shadow-sm ${summary.weekPercentage >= 90 && summary.weekPercentage <= 110
-                        ? 'bg-emerald-50 border-emerald-200'
-                        : summary.weekPercentage < 90
-                            ? 'bg-amber-50 border-amber-200'
-                            : 'bg-rose-50 border-rose-200'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : summary.weekPercentage < 90
+                        ? 'bg-amber-50 border-amber-200'
+                        : 'bg-rose-50 border-rose-200'
                     }`}>
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-medium text-slate-500">สัปดาห์นี้ (Week) <span className="text-xs">Est.</span></h3>
                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${summary.weekPercentage >= 90 && summary.weekPercentage <= 110
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : summary.weekPercentage < 90
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-rose-100 text-rose-700'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : summary.weekPercentage < 90
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-rose-100 text-rose-700'
                             }`}>
                             {summary.weekPercentage >= 90 && summary.weekPercentage <= 110 ? 'ปกติ' : summary.weekPercentage < 90 ? 'ต้องเร่ง' : 'ชะลอ'}
                         </span>
@@ -234,18 +246,18 @@ const MonitorTargetPage = () => {
                 </div>
 
                 <div className={`rounded-xl border-2 p-6 shadow-sm ${summary.periodPercentage >= 90 && summary.periodPercentage <= 110
-                        ? 'bg-emerald-50 border-emerald-200'
-                        : summary.periodPercentage < 90
-                            ? 'bg-amber-50 border-amber-200'
-                            : 'bg-rose-50 border-rose-200'
+                    ? 'bg-emerald-50 border-emerald-200'
+                    : summary.periodPercentage < 90
+                        ? 'bg-amber-50 border-amber-200'
+                        : 'bg-rose-50 border-rose-200'
                     }`}>
                     <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-medium text-slate-500">รอบนี้ (Period) <span className="text-xs">Est.</span></h3>
                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${summary.periodPercentage >= 90 && summary.periodPercentage <= 110
-                                ? 'bg-emerald-100 text-emerald-700'
-                                : summary.periodPercentage < 90
-                                    ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-rose-100 text-rose-700'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : summary.periodPercentage < 90
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-rose-100 text-rose-700'
                             }`}>
                             {summary.periodPercentage >= 90 && summary.periodPercentage <= 110 ? 'ปกติ' : summary.periodPercentage < 90 ? 'ต้องเร่ง' : 'ชะลอ'}
                         </span>
@@ -271,8 +283,8 @@ const MonitorTargetPage = () => {
                         <p className="text-2xl font-bold font-mono text-slate-800">{Math.round(summary.totalPeriodTarget).toLocaleString()}</p>
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500 mb-1">เป้าที่ผ่านมา ({daysInPeriod} วัน)</p>
-                        <p className="text-2xl font-bold font-mono text-indigo-600">{Math.round(summary.totalPeriodTarget).toLocaleString()}</p>
+                        <p className="text-xs text-slate-500 mb-1">เป้าที่ผ่านมา ({daysPassedInPeriod} วัน)</p>
+                        <p className="text-2xl font-bold font-mono text-indigo-600">{Math.round(summary.targetSoFar).toLocaleString()}</p>
                     </div>
                     <div>
                         <p className="text-xs text-slate-500 mb-1">ทำได้จริง</p>
