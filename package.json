@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1",
+    "date-fns": "^4.1.0",
     "firebase": "^12.6.0",
     "lucide-react": "^0.556.0",
     "react": "^19.2.0",
