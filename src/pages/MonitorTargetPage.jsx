@@ -20,7 +20,9 @@ const MonitorTargetPage = () => {
     const { sentData, targetData, dateRange, setDateRange } = useData();
     const [estDays, setEstDays] = React.useState(25);
 
-    const selectedDate = new Date(dateRange.end);
+    // Use actual today for Day/Week calculations
+    const today = new Date();
+    const selectedDate = today; // Use today instead of dateRange.end
     const periodStart = new Date(dateRange.start);
     const periodEnd = new Date(dateRange.end);
 
@@ -43,7 +45,6 @@ const MonitorTargetPage = () => {
 
     // Calculate days passed from period start to today (selectedDate)
     const daysPassedInPeriod = useMemo(() => {
-        const today = new Date();
         const daysPassed = differenceInDays(today, periodStart) + 1;
         // Clamp to period bounds
         return Math.max(1, Math.min(daysPassed, daysInPeriod));
