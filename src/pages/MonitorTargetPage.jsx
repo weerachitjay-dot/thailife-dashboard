@@ -95,14 +95,40 @@ const MonitorTargetPage = () => {
             // Weekly
             const weekRows = processedSent.filter(row => row.Product === prodName && row.Day >= weekStartStr && row.Day <= todayStr);
             const weekActual = weekRows.reduce((sum, r) => sum + r.Leads_Sent, 0);
-            const weekTarget = t.daily * daysInWeek;
-            const weekPercentage = weekTarget > 0 ? (weekActual / weekTarget) * 100 : 0;
+            const weekTargetFull = t.daily * 7; // Full week target
+
+            // Weekly estimation logic
+            let estimatedWeekTotal = weekActual;
+            let weekPercentage = 0;
+
+            if (daysInWeek < 7) {
+                // Incomplete week - estimate
+                const averagePerDay = daysInWeek > 0 ? weekActual / daysInWeek : 0;
+                estimatedWeekTotal = averagePerDay * 7;
+                weekPercentage = weekTargetFull > 0 ? (estimatedWeekTotal / weekTargetFull) * 100 : 0;
+            } else {
+                // Complete week - use actual
+                weekPercentage = weekTargetFull > 0 ? (weekActual / weekTargetFull) * 100 : 0;
+            }
 
             // Period
             const periodRows = processedSent.filter(row => row.Product === prodName && row.Day >= periodStartStr && row.Day <= periodEndStr);
             const periodActual = periodRows.reduce((sum, r) => sum + r.Leads_Sent, 0);
             const periodTarget = t.daily * daysInPeriod;
-            const periodPercentage = periodTarget > 0 ? (periodActual / periodTarget) * 100 : 0;
+
+            // Period estimation logic
+            let estimatedPeriodTotal = periodActual;
+            let periodPercentage = 0;
+
+            if (daysPassedInPeriod < daysInPeriod) {
+                // Incomplete period - estimate
+                const averagePerDay = daysPassedInPeriod > 0 ? periodActual / daysPassedInPeriod : 0;
+                estimatedPeriodTotal = averagePerDay * daysInPeriod;
+                periodPercentage = periodTarget > 0 ? (estimatedPeriodTotal / periodTarget) * 100 : 0;
+            } else {
+                // Complete period - use actual
+                periodPercentage = periodTarget > 0 ? (periodActual / periodTarget) * 100 : 0;
+            }
 
             return {
                 productId: prodName,
@@ -115,17 +141,19 @@ const MonitorTargetPage = () => {
                 dailyPercentage,
                 dailyStatus: getStatus(dailyPercentage),
                 // Weekly
-                weekTarget,
+                weekTarget: weekTargetFull,
                 weekActual,
-                weekVariance: weekActual - weekTarget,
+                weekVariance: weekActual - (t.daily * daysInWeek),
                 weekPercentage,
-                weekStatus: getStatus(weekPercentage),
+                weekStatus: getStatus(weekPercentage), // Now uses estimated %
+                estimatedWeekTotal,
                 // Period
                 periodTarget,
                 periodActual,
-                periodVariance: periodActual - periodTarget,
+                periodVariance: periodActual - (t.daily * daysPassedInPeriod),
                 periodPercentage,
-                periodStatus: getStatus(periodPercentage)
+                periodStatus: getStatus(periodPercentage), // Now uses estimated %
+                estimatedPeriodTotal
             };
         }).sort((a, b) => b.dailyActual - a.dailyActual);
 
