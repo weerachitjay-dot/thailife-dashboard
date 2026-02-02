@@ -24,14 +24,13 @@ const MainLayout = ({ children, user, onLogout, activeTab, setActiveTab }) => {
         { id: 'dashboard', label: 'Overview', icon: LayoutDashboard },
         { id: 'smart-analysis', label: 'Creative Analysis', icon: BarChart2 },
         { id: 'smart-audience', label: 'Smart Audience', icon: PieChart },
-        { id: 'conversion-funnel', label: 'Conversion Funnel', icon: FlaskConical }, // NEW
-        { id: 'monitor', label: 'Target Monitor', icon: Target }, // NEW: Request
-        { id: 'data-control', label: 'Performance Control', icon: Gauge },
-        { id: 'intelligence', label: 'Intelligence Hub', icon: Database }, // Renamed from Raw Data
+        { id: 'conversion-funnel', label: 'Conversion Funnel', icon: FlaskConical },
+        { id: 'monitor', label: 'Monitor Target', icon: Target },
+        { id: 'intelligence', label: 'Intelligence Hub', icon: Database },
         { id: 'time-analysis', label: 'Time Analysis', icon: Clock },
         { id: 'cost-profit', label: 'Cost & Profit', icon: Table },
-        { id: 'leads-analysis', label: 'Leads Analysis', icon: Layers }, // NEW
-        { id: 'product-master', label: 'Product Master', icon: Table, className: 'text-xs' }, // Smaller text if needed
+        { id: 'leads-analysis', label: 'Leads Analysis', icon: Layers },
+        { id: 'product-master', label: 'Product Master', icon: Table, className: 'text-xs' },
     ];
 
     // Add Admin Tab if user is admin
