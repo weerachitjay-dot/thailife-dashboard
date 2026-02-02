@@ -26,9 +26,16 @@ const MonitorTargetPage = () => {
 
     // Calculate days in different periods
     const daysInWeek = useMemo(() => {
-        const dayOfWeek = selectedDate.getDay();
-        return dayOfWeek === 0 ? 7 : dayOfWeek;
-    }, [selectedDate]);
+        // Calculate which week we're in based on period start
+        const daysSincePeriodStart = differenceInDays(selectedDate, periodStart);
+        const currentWeekNumber = Math.floor(daysSincePeriodStart / 7);
+        const weekStart = new Date(periodStart);
+        weekStart.setDate(weekStart.getDate() + (currentWeekNumber * 7));
+
+        // Days passed in current week (1-7)
+        const daysInCurrentWeek = differenceInDays(selectedDate, weekStart) + 1;
+        return Math.min(daysInCurrentWeek, 7);
+    }, [selectedDate, periodStart]);
 
     const daysInPeriod = useMemo(() => {
         return differenceInDays(periodEnd, periodStart) + 1;
@@ -60,8 +67,15 @@ const MonitorTargetPage = () => {
         }, {});
 
         const todayStr = format(selectedDate, 'yyyy-MM-dd');
-        const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
+
+        // Week calculation based on period start (not ISO week)
+        // Calculate which week we're in based on period start
+        const daysSincePeriodStart = differenceInDays(selectedDate, periodStart);
+        const currentWeekNumber = Math.floor(daysSincePeriodStart / 7);
+        const weekStart = new Date(periodStart);
+        weekStart.setDate(weekStart.getDate() + (currentWeekNumber * 7));
         const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+
         const periodStartStr = format(periodStart, 'yyyy-MM-dd');
         const periodEndStr = format(periodEnd, 'yyyy-MM-dd');
 
