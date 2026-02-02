@@ -82,7 +82,7 @@ function PercentageBar({ percentage, status }) {
     );
 }
 
-export function TargetMonitorTable({ data, selectedDate, daysInWeek }) {
+export function TargetMonitorTable({ data, selectedDate, daysInWeek, daysInPeriod }) {
     const sortedData = [...data].sort((a, b) => {
         const priority = { PUSH: 0, STOP: 1, MAINTAIN: 2 };
         return priority[a.dailyStatus] - priority[b.dailyStatus];
@@ -93,7 +93,7 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek }) {
             <div className="p-6 border-b border-slate-100">
                 <h3 className="text-lg font-bold text-slate-800">รายละเอียดตาม Product</h3>
                 <p className="text-sm text-slate-500">
-                    วันที่ {format(new Date(selectedDate), 'dd/MM/yyyy')} — สัปดาห์นี้ผ่านมา {daysInWeek} วัน (จันทร์ = วันที่ 1)
+                    วันที่ {format(new Date(selectedDate), 'dd/MM/yyyy')} — สัปดาห์นี้ผ่านมา {daysInWeek} วัน — รอบนี้ {daysInPeriod} วัน
                 </p>
             </div>
 
@@ -108,6 +108,9 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek }) {
                             <th className="px-4 py-3 text-center border-l border-slate-200" colSpan={4}>
                                 สัปดาห์นี้ (WEEK)
                             </th>
+                            <th className="px-4 py-3 text-center border-l border-slate-200" colSpan={4}>
+                                รอบนี้ (PERIOD)
+                            </th>
                         </tr>
                         <tr className="text-xs uppercase tracking-wider">
                             <th className="px-4 py-2"></th>
@@ -117,6 +120,10 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek }) {
                             <th className="px-4 py-2 text-center">สถานะ</th>
                             <th className="px-4 py-2 text-right border-l border-slate-200">เป้าสะสม</th>
                             <th className="px-4 py-2 text-right">จริงสะสม</th>
+                            <th className="px-4 py-2 text-center">%</th>
+                            <th className="px-4 py-2 text-center">สถานะ</th>
+                            <th className="px-4 py-2 text-right border-l border-slate-200">เป้ารอบ</th>
+                            <th className="px-4 py-2 text-right">จริงรอบ</th>
                             <th className="px-4 py-2 text-center">%</th>
                             <th className="px-4 py-2 text-center">สถานะ</th>
                         </tr>
@@ -133,6 +140,7 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek }) {
                                     </div>
                                 </td>
 
+                                {/* TODAY */}
                                 <td className="px-4 py-4 text-right font-mono text-slate-500 border-l border-slate-100">
                                     {Math.round(item.dailyTarget).toLocaleString()}
                                 </td>
@@ -149,6 +157,7 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek }) {
                                     <StatusBadge status={item.dailyStatus} />
                                 </td>
 
+                                {/* WEEK */}
                                 <td className="px-4 py-4 text-right font-mono text-slate-500 border-l border-slate-100">
                                     {Math.round(item.weekTarget).toLocaleString()}
                                 </td>
@@ -164,12 +173,29 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek }) {
                                 <td className="px-4 py-4 text-center">
                                     <StatusBadge status={item.weekStatus} />
                                 </td>
+
+                                {/* PERIOD */}
+                                <td className="px-4 py-4 text-right font-mono text-slate-500 border-l border-slate-100">
+                                    {Math.round(item.periodTarget).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-4 text-right">
+                                    <div className="flex flex-col items-end">
+                                        <span className="font-mono font-bold text-slate-700">{item.periodActual.toLocaleString()}</span>
+                                        <VarianceDisplay value={item.periodVariance} />
+                                    </div>
+                                </td>
+                                <td className="px-4 py-4">
+                                    <PercentageBar percentage={item.periodPercentage} status={item.periodStatus} />
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                    <StatusBadge status={item.periodStatus} />
+                                </td>
                             </tr>
                         ))}
 
                         {sortedData.length === 0 && (
                             <tr>
-                                <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                                <td colSpan={13} className="px-4 py-12 text-center text-slate-400">
                                     ไม่มีข้อมูลสำหรับวันที่เลือก
                                 </td>
                             </tr>
@@ -180,3 +206,4 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek }) {
         </div>
     );
 }
+

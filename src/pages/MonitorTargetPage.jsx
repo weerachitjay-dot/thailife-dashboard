@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react';
 import { useData } from '../context/DataContext';
 import DateRangePicker from '../components/common/DateRangePicker';
-import { Target } from 'lucide-react';
-import { startOfWeek, format } from 'date-fns';
+import { Target, Calendar } from 'lucide-react';
+import { startOfWeek, format, differenceInDays } from 'date-fns';
 
 import { PaceStatusCard } from '../components/target-monitor/PaceStatusCard';
 import { TargetMonitorChart } from '../components/target-monitor/TargetMonitorChart';
 import { TargetMonitorTable } from '../components/target-monitor/TargetMonitorTable';
+import { PeriodPercentageChart } from '../components/target-monitor/PeriodPercentageChart';
+import { ProductTrendGrid } from '../components/target-monitor/ProductTrendGrid';
 
 function getStatus(percentage) {
     if (percentage < 90) return 'PUSH';
@@ -19,12 +21,20 @@ const MonitorTargetPage = () => {
     const [estDays, setEstDays] = React.useState(25);
 
     const selectedDate = new Date(dateRange.end);
+    const periodStart = new Date(dateRange.start);
+    const periodEnd = new Date(dateRange.end);
 
+    // Calculate days in different periods
     const daysInWeek = useMemo(() => {
         const dayOfWeek = selectedDate.getDay();
         return dayOfWeek === 0 ? 7 : dayOfWeek;
     }, [selectedDate]);
 
+    const daysInPeriod = useMemo(() => {
+        return differenceInDays(periodEnd, periodStart) + 1;
+    }, [periodStart, periodEnd]);
+
+    // Main data calculation
     const paceData = useMemo(() => {
         if (!sentData || !targetData) return [];
 
@@ -44,6 +54,8 @@ const MonitorTargetPage = () => {
         const todayStr = format(selectedDate, 'yyyy-MM-dd');
         const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
         const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+        const periodStartStr = format(periodStart, 'yyyy-MM-dd');
+        const periodEndStr = format(periodEnd, 'yyyy-MM-dd');
 
         const processedSent = sentData.map(d => {
             return { ...d, Leads_Sent: Number(d.Leads_Sent || 0) };
@@ -52,36 +64,52 @@ const MonitorTargetPage = () => {
         return Object.keys(targetsMap).map(prodName => {
             const t = targetsMap[prodName];
 
+            // Daily
             const todayRows = processedSent.filter(row => row.Product === prodName && row.Day === todayStr);
             const dailyActual = todayRows.reduce((sum, r) => sum + r.Leads_Sent, 0);
+            const dailyTarget = t.daily;
+            const dailyPercentage = dailyTarget > 0 ? (dailyActual / dailyTarget) * 100 : 0;
 
+            // Weekly
             const weekRows = processedSent.filter(row => row.Product === prodName && row.Day >= weekStartStr && row.Day <= todayStr);
             const weekActual = weekRows.reduce((sum, r) => sum + r.Leads_Sent, 0);
-
             const weekTarget = t.daily * daysInWeek;
-
-            const dailyPercentage = t.daily > 0 ? (dailyActual / t.daily) * 100 : 0;
             const weekPercentage = weekTarget > 0 ? (weekActual / weekTarget) * 100 : 0;
+
+            // Period
+            const periodRows = processedSent.filter(row => row.Product === prodName && row.Day >= periodStartStr && row.Day <= periodEndStr);
+            const periodActual = periodRows.reduce((sum, r) => sum + r.Leads_Sent, 0);
+            const periodTarget = t.daily * daysInPeriod;
+            const periodPercentage = periodTarget > 0 ? (periodActual / periodTarget) * 100 : 0;
 
             return {
                 productId: prodName,
                 productName: prodName,
                 owner: t.owner,
-                dailyTarget: t.daily,
+                // Daily
+                dailyTarget,
                 dailyActual,
-                dailyVariance: dailyActual - t.daily,
+                dailyVariance: dailyActual - dailyTarget,
                 dailyPercentage,
                 dailyStatus: getStatus(dailyPercentage),
+                // Weekly
                 weekTarget,
                 weekActual,
                 weekVariance: weekActual - weekTarget,
                 weekPercentage,
-                weekStatus: getStatus(weekPercentage)
+                weekStatus: getStatus(weekPercentage),
+                // Period
+                periodTarget,
+                periodActual,
+                periodVariance: periodActual - periodTarget,
+                periodPercentage,
+                periodStatus: getStatus(periodPercentage)
             };
         }).sort((a, b) => b.dailyActual - a.dailyActual);
 
-    }, [sentData, targetData, selectedDate, daysInWeek, estDays]);
+    }, [sentData, targetData, selectedDate, daysInWeek, daysInPeriod, periodStart, periodEnd, estDays]);
 
+    // Summary calculations
     const summary = useMemo(() => {
         const maintain = paceData.filter(p => p.dailyStatus === 'MAINTAIN').length;
         const push = paceData.filter(p => p.dailyStatus === 'PUSH').length;
@@ -89,19 +117,36 @@ const MonitorTargetPage = () => {
 
         const totalDailyTarget = paceData.reduce((sum, p) => sum + p.dailyTarget, 0);
         const totalDailyActual = paceData.reduce((sum, p) => sum + p.dailyActual, 0);
+        const dailyPercentage = totalDailyTarget > 0 ? (totalDailyActual / totalDailyTarget) * 100 : 0;
 
-        return { maintain, push, stop, total: paceData.length, totalDailyTarget, totalDailyActual };
+        const totalWeekTarget = paceData.reduce((sum, p) => sum + p.weekTarget, 0);
+        const totalWeekActual = paceData.reduce((sum, p) => sum + p.weekActual, 0);
+        const weekPercentage = totalWeekTarget > 0 ? (totalWeekActual / totalWeekTarget) * 100 : 0;
+
+        const totalPeriodTarget = paceData.reduce((sum, p) => sum + p.periodTarget, 0);
+        const totalPeriodActual = paceData.reduce((sum, p) => sum + p.periodActual, 0);
+        const periodPercentage = totalPeriodTarget > 0 ? (totalPeriodActual / totalPeriodTarget) * 100 : 0;
+
+        return {
+            maintain, push, stop, total: paceData.length,
+            totalDailyTarget, totalDailyActual, dailyPercentage,
+            totalWeekTarget, totalWeekActual, weekPercentage,
+            totalPeriodTarget, totalPeriodActual, periodPercentage
+        };
     }, [paceData]);
 
     return (
-        <div className="space-y-8 animate-fade-in-up pb-20">
+        <div className="space-y-6 animate-fade-in-up pb-20">
+            {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                 <div className="flex items-center gap-3">
-                    <Target className="h-10 w-10 text-indigo-600" />
+                    <Target className="h-10 w-10 text-slate-800" />
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight text-slate-800">Monitor Target</h1>
-                        <p className="text-slate-500 font-medium">
-                            ควบคุม Pace การส่ง Lead — วันที่ {format(selectedDate, 'dd/MM/yyyy')} (Day {daysInWeek} of Week)
+                        <p className="text-slate-500 font-medium flex items-center gap-2">
+                            <Calendar className="h-4 w-4" />
+                            รอบนี้: {format(periodStart, 'dd/MM/yy')} - {format(periodEnd, 'dd/MM/yy')} ({daysInPeriod} วัน) |
+                            สัปดาห์นี้ผ่านมา {daysInWeek} วัน
                         </p>
                     </div>
                 </div>
@@ -130,7 +175,118 @@ const MonitorTargetPage = () => {
                 </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-4">
+            {/* 3 Period KPI Cards */}
+            <div className="grid gap-4 md:grid-cols-3">
+                <div className={`rounded-xl border-2 p-6 shadow-sm ${summary.dailyPercentage >= 90 && summary.dailyPercentage <= 110
+                        ? 'bg-emerald-50 border-emerald-200'
+                        : summary.dailyPercentage < 90
+                            ? 'bg-amber-50 border-amber-200'
+                            : 'bg-rose-50 border-rose-200'
+                    }`}>
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-slate-500">วันนี้ (Day)</h3>
+                        <span className={`text-xs px-2 py-1 rounded-full font-bold ${summary.dailyPercentage >= 90 && summary.dailyPercentage <= 110
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : summary.dailyPercentage < 90
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-rose-100 text-rose-700'
+                            }`}>
+                            {summary.dailyPercentage >= 90 && summary.dailyPercentage <= 110 ? 'ปกติ' : summary.dailyPercentage < 90 ? 'ต้องเร่ง' : 'ชะลอ'}
+                        </span>
+                    </div>
+                    <div className="text-4xl font-bold tabular-nums text-slate-800 mb-1">
+                        {summary.dailyPercentage.toFixed(0)}%
+                    </div>
+                    <div className="text-sm text-slate-600 font-mono">
+                        {summary.totalDailyActual.toLocaleString()} / {Math.round(summary.totalDailyTarget).toLocaleString()}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                        ส่วนต่าง = {(summary.totalDailyActual - summary.totalDailyTarget) > 0 ? '+' : ''}{Math.round(summary.totalDailyActual - summary.totalDailyTarget).toLocaleString()}
+                    </p>
+                </div>
+
+                <div className={`rounded-xl border-2 p-6 shadow-sm ${summary.weekPercentage >= 90 && summary.weekPercentage <= 110
+                        ? 'bg-emerald-50 border-emerald-200'
+                        : summary.weekPercentage < 90
+                            ? 'bg-amber-50 border-amber-200'
+                            : 'bg-rose-50 border-rose-200'
+                    }`}>
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-slate-500">สัปดาห์นี้ (Week) <span className="text-xs">Est.</span></h3>
+                        <span className={`text-xs px-2 py-1 rounded-full font-bold ${summary.weekPercentage >= 90 && summary.weekPercentage <= 110
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : summary.weekPercentage < 90
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-rose-100 text-rose-700'
+                            }`}>
+                            {summary.weekPercentage >= 90 && summary.weekPercentage <= 110 ? 'ปกติ' : summary.weekPercentage < 90 ? 'ต้องเร่ง' : 'ชะลอ'}
+                        </span>
+                    </div>
+                    <div className="text-4xl font-bold tabular-nums text-slate-800 mb-1">
+                        {summary.weekPercentage.toFixed(0)}%
+                    </div>
+                    <div className="text-sm text-slate-600 font-mono">
+                        {summary.totalWeekActual.toLocaleString()} / {Math.round(summary.totalWeekTarget).toLocaleString()}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                        อ้างอิงตัวหารจาก {daysInWeek} วัน
+                    </p>
+                </div>
+
+                <div className={`rounded-xl border-2 p-6 shadow-sm ${summary.periodPercentage >= 90 && summary.periodPercentage <= 110
+                        ? 'bg-emerald-50 border-emerald-200'
+                        : summary.periodPercentage < 90
+                            ? 'bg-amber-50 border-amber-200'
+                            : 'bg-rose-50 border-rose-200'
+                    }`}>
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-medium text-slate-500">รอบนี้ (Period) <span className="text-xs">Est.</span></h3>
+                        <span className={`text-xs px-2 py-1 rounded-full font-bold ${summary.periodPercentage >= 90 && summary.periodPercentage <= 110
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : summary.periodPercentage < 90
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-rose-100 text-rose-700'
+                            }`}>
+                            {summary.periodPercentage >= 90 && summary.periodPercentage <= 110 ? 'ปกติ' : summary.periodPercentage < 90 ? 'ต้องเร่ง' : 'ชะลอ'}
+                        </span>
+                    </div>
+                    <div className="text-4xl font-bold tabular-nums text-slate-800 mb-1">
+                        {summary.periodPercentage.toFixed(0)}%
+                    </div>
+                    <div className="text-sm text-slate-600 font-mono">
+                        {summary.totalPeriodActual.toLocaleString()} / {Math.round(summary.totalPeriodTarget).toLocaleString()}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                        อ้างอิงตัวหารจาก {daysInPeriod} วัน
+                    </p>
+                </div>
+            </div>
+
+            {/* Period Overview */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">ภาพรวมรอบนี้</h3>
+                <div className="grid grid-cols-4 gap-6">
+                    <div>
+                        <p className="text-xs text-slate-500 mb-1">เป้ารอบ</p>
+                        <p className="text-2xl font-bold font-mono text-slate-800">{Math.round(summary.totalPeriodTarget).toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-slate-500 mb-1">เป้าที่ผ่านมา ({daysInPeriod} วัน)</p>
+                        <p className="text-2xl font-bold font-mono text-indigo-600">{Math.round(summary.totalPeriodTarget).toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-slate-500 mb-1">ทำได้จริง</p>
+                        <p className="text-2xl font-bold font-mono text-emerald-600">{summary.totalPeriodActual.toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-slate-500 mb-1">% ของเป้า</p>
+                        <p className="text-2xl font-bold font-mono text-slate-800">{summary.periodPercentage.toFixed(1)}%</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* 3 Status Summary Cards */}
+            <div className="grid gap-4 md:grid-cols-3">
                 <PaceStatusCard
                     title="ปกติ (MAINTAIN)"
                     count={summary.maintain}
@@ -152,27 +308,24 @@ const MonitorTargetPage = () => {
                     status="STOP"
                     description="เกิน 110%"
                 />
-
-                <div className="bg-white rounded-xl border-2 border-indigo-100 p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-medium text-slate-500">ภาพรวมวันนี้</h3>
-                        <Target className="h-5 w-5 text-indigo-500" />
-                    </div>
-                    <div className="text-3xl font-bold tabular-nums text-slate-800">
-                        {summary.totalDailyActual.toLocaleString()}
-                        <span className="text-lg text-slate-400 font-normal"> / {Math.round(summary.totalDailyTarget).toLocaleString()}</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2">
-                        {summary.totalDailyTarget > 0
-                            ? `${((summary.totalDailyActual / summary.totalDailyTarget) * 100).toFixed(1)}% ของเป้ารวม`
-                            : 'ไม่มีเป้า'}
-                    </p>
-                </div>
             </div>
 
+            {/* Bar Chart */}
             <TargetMonitorChart data={paceData} />
 
-            <TargetMonitorTable data={paceData} selectedDate={selectedDate} daysInWeek={daysInWeek} />
+            {/* Line Chart */}
+            <PeriodPercentageChart data={paceData} />
+
+            {/* Product Trend Grid */}
+            <ProductTrendGrid products={paceData} />
+
+            {/* Detailed Table */}
+            <TargetMonitorTable
+                data={paceData}
+                selectedDate={selectedDate}
+                daysInWeek={daysInWeek}
+                daysInPeriod={daysInPeriod}
+            />
 
         </div>
     );
