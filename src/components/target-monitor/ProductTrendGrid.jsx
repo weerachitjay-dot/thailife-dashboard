@@ -100,10 +100,9 @@ function ProductTrendCard({ product, trendData, daysInWeek, daysPassedInPeriod }
 }
 
 export function ProductTrendGrid({ products, daysInWeek, daysPassedInPeriod }) {
-    // Take top 6 by volume
-    const topProducts = [...products]
-        .sort((a, b) => b.periodActual - a.periodActual) // Sort by period actual instead of daily
-        .slice(0, 6);
+    // Show all products, sorted by period actual (highest first)
+    const sortedProducts = [...products]
+        .sort((a, b) => b.periodActual - a.periodActual);
 
     // Generate mock trend data (in real implementation, this would come from historical data)
     const generateTrendData = (product) => {
@@ -117,12 +116,12 @@ export function ProductTrendGrid({ products, daysInWeek, daysPassedInPeriod }) {
     return (
         <div className="bg-slate-50 rounded-xl border border-slate-200 p-6">
             <div className="mb-4">
-                <h3 className="text-lg font-bold text-slate-800">แนวโน้ม Product (Top 6)</h3>
-                <p className="text-sm text-slate-500">Product ที่มี Leads สูงสุด พร้อมคำแนะนำ</p>
+                <h3 className="text-lg font-bold text-slate-800">แนวโน้ม Product ทั้งหมด</h3>
+                <p className="text-sm text-slate-500">Product ที่มี Target พร้อมคำแนะนำ ({sortedProducts.length} รายการ)</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {topProducts.map((product) => (
+                {sortedProducts.map((product) => (
                     <ProductTrendCard
                         key={product.productId}
                         product={product}
@@ -133,7 +132,7 @@ export function ProductTrendGrid({ products, daysInWeek, daysPassedInPeriod }) {
                 ))}
             </div>
 
-            {topProducts.length === 0 && (
+            {sortedProducts.length === 0 && (
                 <p className="text-center text-slate-400 py-8">ไม่มีข้อมูล</p>
             )}
         </div>
