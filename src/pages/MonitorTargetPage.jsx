@@ -113,7 +113,8 @@ const MonitorTargetPage = () => {
             }
 
             // Period
-            const periodRows = processedSent.filter(row => row.Product === prodName && row.Day >= periodStartStr && row.Day <= periodEndStr);
+            // CRITICAL FIX: Filter data up to TODAY only, not entire period
+            const periodRows = processedSent.filter(row => row.Product === prodName && row.Day >= periodStartStr && row.Day <= todayStr);
             const periodActual = periodRows.reduce((sum, r) => sum + r.Leads_Sent, 0);
             const periodTarget = t.daily * daysInPeriod;
 
