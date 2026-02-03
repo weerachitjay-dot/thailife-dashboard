@@ -80,6 +80,14 @@ const MonitorTargetPage = () => {
         const periodStartStr = format(periodStart, 'yyyy-MM-dd');
         const periodEndStr = format(periodEnd, 'yyyy-MM-dd');
 
+        // DEBUG: Log to identify Week vs Period mismatch
+        console.log('=== DEBUG Week Calculation ===');
+        console.log('Today:', todayStr);
+        console.log('Week Start:', weekStartStr);
+        console.log('Period Start:', periodStartStr);
+        console.log('Days in Week:', daysInWeek);
+        console.log('Days Passed in Period:', daysPassedInPeriod);
+
         const processedSent = sentData.map(d => {
             return { ...d, Leads_Sent: Number(d.Leads_Sent || 0) };
         });
@@ -303,13 +311,13 @@ const MonitorTargetPage = () => {
                     </div>
                     <div className="text-sm text-slate-600 font-mono">
                         {summary.isWeekEstimated
-                            ? `${Math.round(summary.estimatedWeekTotal).toLocaleString()} / ${Math.round(summary.weekTargetFull).toLocaleString()}`
+                            ? `${summary.totalWeekActual.toLocaleString()} / ${Math.round(summary.weekTargetFull).toLocaleString()}`
                             : `${summary.totalWeekActual.toLocaleString()} / ${Math.round(summary.weekTargetFull).toLocaleString()}`
                         }
                     </div>
                     <p className="text-xs text-slate-500 mt-2">
                         {summary.isWeekEstimated
-                            ? `Estimate จากจริงสะสม ${daysInWeek} วัน`
+                            ? `จริงสะสม ${daysInWeek} วัน → Estimate 7 วัน = ${Math.round(summary.estimatedWeekTotal).toLocaleString()}`
                             : `สัปดาห์นี้ผ่านครบแล้ว`
                         }
                     </p>
