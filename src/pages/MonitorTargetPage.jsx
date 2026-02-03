@@ -374,8 +374,8 @@ const MonitorTargetPage = () => {
                 </div>
             </div>
 
-            {/* Period Overview */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+            {/* Period Overview - Moved to top */}
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl border border-slate-200 shadow-sm p-6">
                 <h3 className="text-lg font-bold text-slate-800 mb-4">ภาพรวมรอบนี้</h3>
                 <div className="grid grid-cols-4 gap-6">
                     <div>
@@ -391,35 +391,13 @@ const MonitorTargetPage = () => {
                         <p className="text-2xl font-bold font-mono text-emerald-600">{summary.totalPeriodActual.toLocaleString()}</p>
                     </div>
                     <div>
-                        <p className="text-xs text-slate-500 mb-1">% ของเป้า</p>
-                        <p className="text-2xl font-bold font-mono text-slate-800">{summary.periodPercentage.toFixed(1)}%</p>
+                        <p className="text-xs text-slate-500 mb-1">ทำได้จริง / เป้ารอบ</p>
+                        <p className="text-2xl font-bold font-mono text-slate-800">
+                            {summary.totalPeriodActual.toLocaleString()} / {Math.round(summary.totalPeriodTarget).toLocaleString()}
+                        </p>
+                        <p className="text-sm text-slate-600 mt-1">= {summary.periodPercentage.toFixed(1)}%</p>
                     </div>
                 </div>
-            </div>
-
-            {/* 3 Status Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <PaceStatusCard
-                    title="ปกติ (MAINTAIN)"
-                    count={summary.maintain}
-                    total={summary.total}
-                    status="MAINTAIN"
-                    description="อยู่ในกรอบ 90-110%"
-                />
-                <PaceStatusCard
-                    title="ต้องเร่ง (PUSH)"
-                    count={summary.push}
-                    total={summary.total}
-                    status="PUSH"
-                    description="ต่ำกว่า 90%"
-                />
-                <PaceStatusCard
-                    title="ชะลอ (STOP)"
-                    count={summary.stop}
-                    total={summary.total}
-                    status="STOP"
-                    description="เกิน 110%"
-                />
             </div>
 
             {/* Bar Chart */}
