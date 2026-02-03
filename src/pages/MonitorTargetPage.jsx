@@ -429,7 +429,7 @@ const MonitorTargetPage = () => {
             <PeriodPercentageChart data={paceData} />
 
             {/* Product Trend Grid */}
-            <ProductTrendGrid products={paceData} />
+            <ProductTrendGrid products={paceData} daysInWeek={daysInWeek} daysPassedInPeriod={daysPassedInPeriod} />
 
             {/* Detailed Table */}
             <TargetMonitorTable

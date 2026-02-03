@@ -26,16 +26,40 @@ function MiniTrendChart({ data, status }) {
     );
 }
 
-function ProductTrendCard({ product, trendData }) {
-    const config = statusConfig[product.dailyStatus];
+function ProductTrendCard({ product, trendData, daysInWeek, daysPassedInPeriod }) {
+    // Determine overall status (use Week status as primary)
+    const status = product.weekStatus;
+    const config = statusConfig[status];
     const Icon = config.icon;
-    const variance = product.dailyVariance;
-    const isPositive = variance > 0;
+
+    // Calculate current avg/day and target avg/day
+    const currentAvgPerDay = daysPassedInPeriod > 0 ? product.periodActual / daysPassedInPeriod : 0;
+    const targetAvgPerDay = product.periodTarget / (product.periodTarget / (product.dailyTarget || 1)); // Approximate days in period
+
+    // Calculate action needed
+    let actionText = '';
+    let actionDetail = '';
+
+    if (status === 'PUSH') {
+        // Need to increase
+        const needed = targetAvgPerDay - currentAvgPerDay;
+        actionText = `⚡ เพิ่ม ${needed.toFixed(1)} leads/วัน`;
+        actionDetail = `จาก ${currentAvgPerDay.toFixed(1)} → ${targetAvgPerDay.toFixed(1)} leads/วัน`;
+    } else if (status === 'STOP') {
+        // Need to reduce
+        const reductionPct = ((currentAvgPerDay - targetAvgPerDay) / currentAvgPerDay * 100);
+        actionText = `🛑 ลด ${reductionPct.toFixed(0)}%`;
+        actionDetail = `จาก ${currentAvgPerDay.toFixed(1)} → ${targetAvgPerDay.toFixed(1)} leads/วัน`;
+    } else {
+        // Maintain
+        actionText = `✅ รักษา ${currentAvgPerDay.toFixed(1)} leads/วัน`;
+        actionDetail = 'อยู่ในกรอบเป้าหมาย';
+    }
 
     return (
         <div className={`${config.bgClass} border-2 ${config.borderClass} rounded-xl p-4`}>
             {/* Header */}
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                     <h4 className="font-bold text-sm text-slate-800 truncate">{product.productName}</h4>
                     {product.owner && (
@@ -48,41 +72,43 @@ function ProductTrendCard({ product, trendData }) {
                 </span>
             </div>
 
-            {/* Mini Chart */}
-            <div className="mb-2">
-                <MiniTrendChart data={trendData} status={product.dailyStatus} />
+            {/* Week & Period Status */}
+            <div className="space-y-2 mb-3 pb-3 border-b border-slate-200">
+                <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-600">📊 Week:</span>
+                    <div className="text-right">
+                        <span className={`text-sm font-bold ${config.textClass}`}>{product.weekPercentage.toFixed(0)}%</span>
+                        <span className="text-xs text-slate-500 ml-2">({product.weekActual}/{Math.round(product.weekTarget)})</span>
+                    </div>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-600">📈 Period:</span>
+                    <div className="text-right">
+                        <span className={`text-sm font-bold ${config.textClass}`}>{product.periodPercentage.toFixed(0)}%</span>
+                        <span className="text-xs text-slate-500 ml-2">({product.periodActual}/{Math.round(product.periodTarget)})</span>
+                    </div>
+                </div>
             </div>
 
-            {/* Metrics */}
-            <div className="flex items-end justify-between">
-                <div>
-                    <p className="text-xs text-slate-500">จริง: <span className="font-mono font-bold text-slate-700">{product.dailyActual}</span></p>
-                    <p className="text-xs text-slate-500">เป้า: <span className="font-mono">{Math.round(product.dailyTarget)}</span></p>
-                </div>
-                <div className="text-right">
-                    <p className={`text-2xl font-bold tabular-nums ${config.textClass}`}>
-                        {product.dailyPercentage.toFixed(0)}%
-                    </p>
-                    <p className={`text-xs font-mono flex items-center gap-0.5 justify-end ${isPositive ? 'text-rose-600' : 'text-amber-600'}`}>
-                        {isPositive ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                        {isPositive && '+'}{Math.round(variance)}
-                    </p>
-                </div>
+            {/* Action Recommendation */}
+            <div className="bg-white bg-opacity-50 rounded-lg p-2">
+                <p className="text-xs font-bold text-slate-700 mb-1">{actionText}</p>
+                <p className="text-[10px] text-slate-600">{actionDetail}</p>
             </div>
         </div>
     );
 }
 
-export function ProductTrendGrid({ products }) {
+export function ProductTrendGrid({ products, daysInWeek, daysPassedInPeriod }) {
     // Take top 6 by volume
     const topProducts = [...products]
-        .sort((a, b) => b.dailyActual - a.dailyActual)
+        .sort((a, b) => b.periodActual - a.periodActual) // Sort by period actual instead of daily
         .slice(0, 6);
 
     // Generate mock trend data (in real implementation, this would come from historical data)
     const generateTrendData = (product) => {
         // For now, generate dummy data based on current percentage
-        const baseValue = product.dailyPercentage;
+        const baseValue = product.weekPercentage;
         return Array.from({ length: 7 }, (_, i) => ({
             value: baseValue + (Math.random() - 0.5) * 20
         }));
@@ -91,8 +117,8 @@ export function ProductTrendGrid({ products }) {
     return (
         <div className="bg-slate-50 rounded-xl border border-slate-200 p-6">
             <div className="mb-4">
-                <h3 className="text-lg font-bold text-slate-800">กราฟแนวโน้ม Product (Top 6)</h3>
-                <p className="text-sm text-slate-500">Product ที่มี Leads สูงสุด</p>
+                <h3 className="text-lg font-bold text-slate-800">แนวโน้ม Product (Top 6)</h3>
+                <p className="text-sm text-slate-500">Product ที่มี Leads สูงสุด พร้อมคำแนะนำ</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -101,6 +127,8 @@ export function ProductTrendGrid({ products }) {
                         key={product.productId}
                         product={product}
                         trendData={generateTrendData(product)}
+                        daysInWeek={daysInWeek}
+                        daysPassedInPeriod={daysPassedInPeriod}
                     />
                 ))}
             </div>
