@@ -7,7 +7,7 @@ import { startOfWeek, format, differenceInDays } from 'date-fns';
 import { PaceStatusCard } from '../components/target-monitor/PaceStatusCard';
 import { TargetMonitorChart } from '../components/target-monitor/TargetMonitorChart';
 import { TargetMonitorTable } from '../components/target-monitor/TargetMonitorTable';
-import { PeriodPercentageChart } from '../components/target-monitor/PeriodPercentageChart';
+
 import { ProductTrendGrid } from '../components/target-monitor/ProductTrendGrid';
 
 function getStatus(percentage) {
@@ -425,8 +425,7 @@ const MonitorTargetPage = () => {
             {/* Bar Chart */}
             <TargetMonitorChart data={paceData} />
 
-            {/* Line Chart */}
-            <PeriodPercentageChart data={paceData} />
+
 
             {/* Product Trend Grid */}
             <ProductTrendGrid products={paceData} daysInWeek={daysInWeek} daysPassedInPeriod={daysPassedInPeriod} />
