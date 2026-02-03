@@ -101,7 +101,7 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek, daysInPerio
                 <table className="w-full text-sm text-left">
                     <thead className="bg-slate-50 text-slate-500 font-bold border-b border-slate-100">
                         <tr>
-                            <th className="px-4 py-3 w-[200px]">Product</th>
+                            <th className="sticky left-0 z-20 bg-slate-50 px-4 py-3 w-[200px]">Product</th>
                             <th className="px-4 py-3 text-center border-l border-slate-200" colSpan={4}>
                                 วันนี้ (TODAY)
                             </th>
@@ -113,7 +113,7 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek, daysInPerio
                             </th>
                         </tr>
                         <tr className="text-xs uppercase tracking-wider">
-                            <th className="px-4 py-2"></th>
+                            <th className="sticky left-0 z-20 bg-slate-50 px-4 py-2"></th>
                             <th className="px-4 py-2 text-right border-l border-slate-200">เป้า</th>
                             <th className="px-4 py-2 text-right">จริง</th>
                             <th className="px-4 py-2 text-center">%</th>
@@ -130,8 +130,8 @@ export function TargetMonitorTable({ data, selectedDate, daysInWeek, daysInPerio
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {sortedData.map((item) => (
-                            <tr key={item.productId} className="hover:bg-slate-50 transition-colors">
-                                <td className="px-4 py-4 font-medium text-slate-700">
+                            <tr key={item.productId} className="group hover:bg-slate-50 transition-colors">
+                                <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 px-4 py-4 font-medium text-slate-700 border-r border-slate-200 transition-colors">
                                     <div>
                                         <p>{item.productName}</p>
                                         {item.owner && (
