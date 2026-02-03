@@ -11,11 +11,11 @@ export function TargetMonitorChart({ data }) {
     const chartData = data.map(item => ({
         name: item.productName.length > 15 ? item.productName.substring(0, 15) + '...' : item.productName,
         fullName: item.productName,
-        actual: item.dailyActual,
-        target: item.dailyTarget,
-        percentage: item.dailyPercentage,
-        status: item.dailyStatus,
-        variance: item.dailyVariance,
+        actual: item.weekActual,
+        target: item.weekTarget,
+        percentage: item.weekPercentage,
+        status: item.weekStatus,
+        variance: item.weekVariance,
     }));
 
     const CustomTooltip = ({ active, payload }) => {
@@ -54,7 +54,7 @@ export function TargetMonitorChart({ data }) {
     return (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
             <div className="mb-6">
-                <h3 className="text-lg font-bold text-slate-800">กราฟเปรียบเทียบ Actual vs Target (วันนี้)</h3>
+                <h3 className="text-lg font-bold text-slate-800">กราฟเปรียบเทียบ Actual vs Target (สัปดาห์นี้)</h3>
                 <p className="text-sm text-slate-500">
                     แท่งสีเขียว = ปกติ (90-110%), สีเหลือง = ต้องเร่ง (&lt;90%), สีแดง = เกินเป้า (&gt;110%)
                 </p>
