@@ -202,7 +202,23 @@ const MonitorTargetPage = () => {
 
         const totalPeriodTarget = paceData.reduce((sum, p) => sum + p.periodTarget, 0);
         const totalPeriodActual = paceData.reduce((sum, p) => sum + p.periodActual, 0);
-        const periodPercentage = totalPeriodTarget > 0 ? (totalPeriodActual / totalPeriodTarget) * 100 : 0;
+
+        // Period estimation logic (similar to Week)
+        let estimatedPeriodTotal = totalPeriodActual;
+        let periodPercentage = 0;
+        let isPeriodEstimated = false;
+
+        if (daysPassedInPeriod < daysInPeriod) {
+            // Incomplete period - estimate based on daily average
+            const averagePerDay = daysPassedInPeriod > 0 ? totalPeriodActual / daysPassedInPeriod : 0;
+            estimatedPeriodTotal = averagePerDay * daysInPeriod;
+            periodPercentage = totalPeriodTarget > 0 ? (estimatedPeriodTotal / totalPeriodTarget) * 100 : 0;
+            isPeriodEstimated = true;
+        } else {
+            // Complete period - use actual
+            periodPercentage = totalPeriodTarget > 0 ? (totalPeriodActual / totalPeriodTarget) * 100 : 0;
+            isPeriodEstimated = false;
+        }
 
         // Target for days passed so far
         const targetSoFar = totalDailyTarget * daysPassedInPeriod;
@@ -213,6 +229,7 @@ const MonitorTargetPage = () => {
             totalWeekTarget, totalWeekActual, weekPercentage,
             weekTargetFull, estimatedWeekTotal, isWeekEstimated,
             totalPeriodTarget, totalPeriodActual, periodPercentage,
+            estimatedPeriodTotal, isPeriodEstimated,
             targetSoFar
         };
     }, [paceData, daysInWeek, daysPassedInPeriod]);
@@ -330,7 +347,9 @@ const MonitorTargetPage = () => {
                         : 'bg-rose-50 border-rose-200'
                     }`}>
                     <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-medium text-slate-500">รอบนี้ (Period) <span className="text-xs">Est.</span></h3>
+                        <h3 className="text-sm font-medium text-slate-500">
+                            รอบนี้ (Period) <span className="text-xs">{summary.isPeriodEstimated ? 'Est.' : ''}</span>
+                        </h3>
                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${summary.periodPercentage >= 90 && summary.periodPercentage <= 110
                             ? 'bg-emerald-100 text-emerald-700'
                             : summary.periodPercentage < 90
@@ -347,7 +366,10 @@ const MonitorTargetPage = () => {
                         {summary.totalPeriodActual.toLocaleString()} / {Math.round(summary.totalPeriodTarget).toLocaleString()}
                     </div>
                     <p className="text-xs text-slate-500 mt-2">
-                        อ้างอิงตัวหารจาก {daysInPeriod} วัน
+                        {summary.isPeriodEstimated
+                            ? `จริงสะสม ${daysPassedInPeriod} วัน → Estimate ${daysInPeriod} วัน = ${Math.round(summary.estimatedPeriodTotal).toLocaleString()}`
+                            : `รอบนี้ผ่านครบแล้ว`
+                        }
                     </p>
                 </div>
             </div>
