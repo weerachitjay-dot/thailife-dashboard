@@ -1,0 +1,273 @@
+{
+  "analysisDate": "2026-02-05",
+  "analysisPeriod": "2026-01-06 to 2026-02-05",
+  "daysAnalyzed": 30,
+  "bestProduct": {
+    "product": "LIFE-EXTRASENIOR-BUPHAKARI",
+    "totalSpend": 64624.05999999999,
+    "totalLeads": 308,
+    "totalImpressions": 1768678,
+    "records": 1000,
+    "dailyData": {
+      "2026-01-06": {
+        "spend": 26448.769999999982,
+        "leads": 158,
+        "records": 340
+      },
+      "2026-01-07": {
+        "spend": 30762.939999999973,
+        "leads": 126,
+        "records": 485
+      },
+      "2026-01-08": {
+        "spend": 7412.350000000004,
+        "leads": 24,
+        "records": 175
+      }
+    },
+    "campaigns": {},
+    "cpl": 209.8183766233766,
+    "avgDailySpend": 21541.35333333333,
+    "avgDailyLeads": 102.66666666666667,
+    "numCampaigns": 35,
+    "cplStdDev": 57.816848158409286,
+    "cplCoeffOfVar": 24.07712727794447,
+    "totalMetaLeads": 79,
+    "cpm": 36.53805836901911,
+    "leadDiscrepancy": 229
+  },
+  "otherProducts": [
+    {
+      "product": "LIFE-SENIOR-MORRADOK",
+      "totalSpend": 53879.749999999905,
+      "totalLeads": 203,
+      "totalImpressions": 6887554,
+      "records": 1000,
+      "dailyData": {
+        "2026-01-06": {
+          "spend": 23516.039999999983,
+          "leads": 90,
+          "records": 409
+        },
+        "2026-01-07": {
+          "spend": 28579.55000000002,
+          "leads": 106,
+          "records": 537
+        },
+        "2026-01-08": {
+          "spend": 1784.1599999999994,
+          "leads": 7,
+          "records": 54
+        }
+      },
+      "campaigns": {},
+      "cpl": 265.4174876847286,
+      "avgDailySpend": 17959.916666666635,
+      "avgDailyLeads": 67.66666666666667,
+      "numCampaigns": 25,
+      "cplStdDev": 6.0339149423304725,
+      "cplCoeffOfVar": 2.3036431018251253,
+      "totalMetaLeads": 722,
+      "cpm": 7.822769883183479,
+      "leadDiscrepancy": 519
+    },
+    {
+      "product": "LIFE-SENIOR-BONECARE",
+      "totalSpend": 100988.84000000003,
+      "totalLeads": 238,
+      "totalImpressions": 1491917,
+      "records": 1000,
+      "dailyData": {
+        "2026-01-06": {
+          "spend": 9874.570000000002,
+          "leads": 22,
+          "records": 88
+        },
+        "2026-01-07": {
+          "spend": 12574.26,
+          "leads": 38,
+          "records": 119
+        },
+        "2026-01-08": {
+          "spend": 10939.73,
+          "leads": 23,
+          "records": 120
+        },
+        "2026-01-09": {
+          "spend": 11551.160000000002,
+          "leads": 24,
+          "records": 121
+        },
+        "2026-01-10": {
+          "spend": 9053.689999999999,
+          "leads": 21,
+          "records": 96
+        },
+        "2026-01-11": {
+          "spend": 11474.71,
+          "leads": 18,
+          "records": 96
+        },
+        "2026-01-12": {
+          "spend": 12202.240000000003,
+          "leads": 23,
+          "records": 105
+        },
+        "2026-01-13": {
+          "spend": 11075.800000000001,
+          "leads": 37,
+          "records": 116
+        },
+        "2026-01-14": {
+          "spend": 12242.679999999995,
+          "leads": 32,
+          "records": 139
+        }
+      },
+      "campaigns": {},
+      "cpl": 424.32285714285723,
+      "avgDailySpend": 11220.982222222225,
+      "avgDailyLeads": 26.444444444444443,
+      "numCampaigns": 8,
+      "cplStdDev": 97.14860763615523,
+      "cplCoeffOfVar": 21.761823514256726,
+      "totalMetaLeads": 129,
+      "cpm": 67.69065571342108,
+      "leadDiscrepancy": 109
+    }
+  ],
+  "allProducts": [
+    {
+      "product": "LIFE-EXTRASENIOR-BUPHAKARI",
+      "totalSpend": 64624.05999999999,
+      "totalLeads": 308,
+      "totalImpressions": 1768678,
+      "records": 1000,
+      "dailyData": {
+        "2026-01-06": {
+          "spend": 26448.769999999982,
+          "leads": 158,
+          "records": 340
+        },
+        "2026-01-07": {
+          "spend": 30762.939999999973,
+          "leads": 126,
+          "records": 485
+        },
+        "2026-01-08": {
+          "spend": 7412.350000000004,
+          "leads": 24,
+          "records": 175
+        }
+      },
+      "campaigns": {},
+      "cpl": 209.8183766233766,
+      "avgDailySpend": 21541.35333333333,
+      "avgDailyLeads": 102.66666666666667,
+      "numCampaigns": 35,
+      "cplStdDev": 57.816848158409286,
+      "cplCoeffOfVar": 24.07712727794447,
+      "totalMetaLeads": 79,
+      "cpm": 36.53805836901911,
+      "leadDiscrepancy": 229
+    },
+    {
+      "product": "LIFE-SENIOR-MORRADOK",
+      "totalSpend": 53879.749999999905,
+      "totalLeads": 203,
+      "totalImpressions": 6887554,
+      "records": 1000,
+      "dailyData": {
+        "2026-01-06": {
+          "spend": 23516.039999999983,
+          "leads": 90,
+          "records": 409
+        },
+        "2026-01-07": {
+          "spend": 28579.55000000002,
+          "leads": 106,
+          "records": 537
+        },
+        "2026-01-08": {
+          "spend": 1784.1599999999994,
+          "leads": 7,
+          "records": 54
+        }
+      },
+      "campaigns": {},
+      "cpl": 265.4174876847286,
+      "avgDailySpend": 17959.916666666635,
+      "avgDailyLeads": 67.66666666666667,
+      "numCampaigns": 25,
+      "cplStdDev": 6.0339149423304725,
+      "cplCoeffOfVar": 2.3036431018251253,
+      "totalMetaLeads": 722,
+      "cpm": 7.822769883183479,
+      "leadDiscrepancy": 519
+    },
+    {
+      "product": "LIFE-SENIOR-BONECARE",
+      "totalSpend": 100988.84000000003,
+      "totalLeads": 238,
+      "totalImpressions": 1491917,
+      "records": 1000,
+      "dailyData": {
+        "2026-01-06": {
+          "spend": 9874.570000000002,
+          "leads": 22,
+          "records": 88
+        },
+        "2026-01-07": {
+          "spend": 12574.26,
+          "leads": 38,
+          "records": 119
+        },
+        "2026-01-08": {
+          "spend": 10939.73,
+          "leads": 23,
+          "records": 120
+        },
+        "2026-01-09": {
+          "spend": 11551.160000000002,
+          "leads": 24,
+          "records": 121
+        },
+        "2026-01-10": {
+          "spend": 9053.689999999999,
+          "leads": 21,
+          "records": 96
+        },
+        "2026-01-11": {
+          "spend": 11474.71,
+          "leads": 18,
+          "records": 96
+        },
+        "2026-01-12": {
+          "spend": 12202.240000000003,
+          "leads": 23,
+          "records": 105
+        },
+        "2026-01-13": {
+          "spend": 11075.800000000001,
+          "leads": 37,
+          "records": 116
+        },
+        "2026-01-14": {
+          "spend": 12242.679999999995,
+          "leads": 32,
+          "records": 139
+        }
+      },
+      "campaigns": {},
+      "cpl": 424.32285714285723,
+      "avgDailySpend": 11220.982222222225,
+      "avgDailyLeads": 26.444444444444443,
+      "numCampaigns": 8,
+      "cplStdDev": 97.14860763615523,
+      "cplCoeffOfVar": 21.761823514256726,
+      "totalMetaLeads": 129,
+      "cpm": 67.69065571342108,
+      "leadDiscrepancy": 109
+    }
+  ]
+}

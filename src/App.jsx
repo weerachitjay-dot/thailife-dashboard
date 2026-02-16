@@ -16,6 +16,7 @@ import ProductMasterPage from './pages/ProductMasterPage';
 import LeadsAnalysisPage from './pages/LeadsAnalysisPage';
 import AdminPage from './pages/AdminPage';
 import MonitorTargetPage from './pages/MonitorTargetPage';
+import PerformanceReportPage from './pages/PerformanceReportPage';
 import './App.css';
 
 // --- Authenticated App Content ---

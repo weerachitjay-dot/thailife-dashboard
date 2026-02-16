@@ -1,7 +1,7 @@
 
 import { supabase } from './supabase';
 import { SHEET_CONFIG, SUPABASE_TABLES, SNIPPET_APPEND, SNIPPET_APPENDSENT, SNIPPET_TARGET } from '../utils/constants';
-import { parseCSV, processAppendData, processSentData } from '../utils/formatters';
+import { parseCSV, processAppendData, processSentData, processTelesalesData } from '../utils/formatters';
 import { setCachedData } from './cache';
 
 // Helper to fetch CSV text
@@ -139,7 +139,7 @@ const mapRow = (type, row) => {
             // DB: day, product, leads_tl
             return {
                 day: getVal(['Day', 'day']),
-                product: getVal(['Product', 'product']),
+                product: getVal(['Product', 'product', 'Product_Normalized']),
                 leads_tl: parseInt(getVal(['Leads_TL', 'leads_tl']) || 0)
             };
         default:
@@ -177,6 +177,8 @@ export const syncSheetToSupabase = async (type) => {
         enrichedData = processAppendData(parsedData, mappings);
     } else if (type === 'sent') {
         enrichedData = processSentData(parsedData, mappings);
+    } else if (type === 'telesales') {
+        enrichedData = processTelesalesData(parsedData, mappings);
     }
 
     // Map to DB Schema

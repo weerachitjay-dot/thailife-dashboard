@@ -152,6 +152,7 @@ export const normalizeProduct = (productRaw, mappings = []) => {
     if (/สูงวัยมีทรัพย์|buphakari/gi.test(p)) return "LIFE-EXTRASENIOR-BUPHAKARI";
     if (/โบนแคร์|bone.?care/gi.test(p)) return "LIFE-SENIOR-BONECARE";
     if (/ไร้กังวล|สูงวัยไร้กังวล|มรดก|moradok|morradok/gi.test(p)) return "LIFE-SENIOR-MORRADOK";
+    if (/ซุปเปอร์.?แคร์|super.?care/gi.test(p)) return "LIFE-SENIOR-SUPERCARE";
 
     return p;
 };
@@ -302,6 +303,15 @@ export const processSentData = (data, mappings = []) => {
     return data.map(row => ({
         ...row,
         Product_Normalized: normalizeProduct(row.Product1 || row.product || row.Product, mappings),
+        Day: row.Day || row.day
+    }));
+};
+
+export const processTelesalesData = (data, mappings = []) => {
+    if (!Array.isArray(data)) return [];
+    return data.map(row => ({
+        ...row,
+        Product_Normalized: normalizeProduct(row.Product || row.product, mappings),
         Day: row.Day || row.day
     }));
 };
